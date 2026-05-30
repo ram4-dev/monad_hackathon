@@ -2,6 +2,8 @@
 
 Este plan baja `docs/constitution.md` v0.6 y `compass_product_spec_monad_mcp_proxy_v0.2.md` a waves implementables. Si hay tensión entre documentos, **manda la constitución**: P0 es un **MCP security proxy** dentro de Claude/Codex/Cursor, con **Wallet Agent como MCP upstream**, Monad Testnet, registry de semántica, policy `allow|block`, digest, idempotencia y audit local append-only.
 
+> **Actualización del modelo de policy (desde W4):** las policies dejan de ser un JSON local y pasan a vivir **on-chain en Monad Testnet como un contrato de policy por usuario** (per-user). Compass **resuelve la identidad del usuario (definida por W3), lee** su contrato de policy para decidir `allow|block`, y también **gestiona su ciclo de vida (deploy/registro/update) como acción on-chain guardada**. La evaluación es **fail-closed**: si la policy del usuario no se puede resolver/leer, se bloquea. Este cambio aplica a **W4, W5 y W6**; W0–W3 no se modifican aquí (W3 es responsable de la identidad de usuario y del shape del contrato). **Divergencia conocida:** `docs/constitution.md` §3.4 todavía describe la policy como local y deja fuera de P0 las reglas que dependen de estado on-chain; adoptar este modelo **requiere una enmienda de constitución (ADR)** que se gestiona por separado (owner de W3). Hasta que esa enmienda exista, la regla "manda la constitución" sigue vigente y este documento marca explícitamente la divergencia.
+
 ## Quick path
 
 1. Validar Wallet Agent + Monad Testnet como upstream real.
@@ -76,9 +78,9 @@ Regla de paralelización: **W1 puede arrancar en paralelo con W0 usando un upstr
 | W1   | MCP proxy skeleton + upstream adapter | none                                 | W0 para conectar al Wallet Agent real | Proxy MCP server/client, upstream process wiring y fixtures de integración.              |
 | W2   | Tool semantics registry               | W0 schema capture para versión final | W1 integration shape                  | Registry-first tool exposure, `input_schema_hash` y bloqueo de unmapped tools.           |
 | W3   | Policy, risk and audit foundation     | W2 registry shape/classes            | W0 gas/RPC facts finales              | Policy `allow\|block`, safe errors, risk checks y audit append-only.                     |
-| W4   | Guarded forward pipeline              | W1, W2, W3                           | W0 real simulation behavior           | `tools/call` interception, digest, idempotency, forward/block.                           |
-| W5   | Monad action coverage                 | W0, W4                               | none                                  | P0 Wallet Agent tools funcionando de forma segura en Monad Testnet.                      |
-| W6   | Demo hardening and release readiness  | W5                                   | none                                  | Demo reproducible, tests, docs y no-bypass proof.                                        |
+| W4   | Guarded forward pipeline              | W1, W2, W3 (contrato policy on-chain) | W0 real simulation + RPC reads        | `tools/call` interception, digest, idempotency, forward/block contra policy on-chain per-user. |
+| W5   | Monad action coverage                 | W0, W4                               | none                                  | P0 Wallet Agent tools seguras en Monad Testnet + ciclo de vida del contrato de policy por usuario. |
+| W6   | Demo hardening and release readiness  | W5                                   | none                                  | Demo reproducible (incluye deploy/seed de policy on-chain), tests, docs y no-bypass proof. |
 
 ## Dependency contract per wave
 
@@ -119,19 +121,19 @@ Regla de paralelización: **W1 puede arrancar en paralelo con W0 usando un upstr
 
 ### W4 — Guarded forward pipeline
 
-- **Hard dependencies:** W1 + W2 + W3.
-- **Soft dependencies:** W0 para correr simulación real contra Wallet Agent/Monad.
-- **Start gate:** proxy skeleton, registry P0 y policy/audit disponibles.
-- **Exit gate:** blocked calls no llegan al upstream; allowed calls forwardean exactamente una vez; digest/idempotency/audit funcionan.
+- **Hard dependencies:** W1 + W2 + W3. De W3 en particular: el **contrato de policy on-chain per-user**, la interfaz de **identidad de usuario** y el **reader** del estado del contrato.
+- **Soft dependencies:** W0 para correr simulación real contra Wallet Agent/Monad **y** facts de RPC para leer el estado del contrato de policy (`eth_call`).
+- **Start gate:** proxy skeleton, registry P0 y la interfaz de policy on-chain de W3 disponibles (aunque sea contra un contrato de prueba).
+- **Exit gate:** blocked calls no llegan al upstream; allowed calls forwardean exactamente una vez; digest/idempotency/audit funcionan; la decisión `allow|block` se evalúa contra el contrato de policy on-chain del usuario y es **fail-closed** si no se puede resolver/leer.
 - **Unlocks hard:** W5 Monad action coverage.
-- **Can start early:** solo tests unitarios con upstream mock; no real forwarding hasta W1/W2/W3.
+- **Can start early:** solo tests unitarios con upstream mock y un mock del reader de policy on-chain; no real forwarding hasta W1/W2/W3.
 
 ### W5 — Monad action coverage
 
 - **Hard dependencies:** W0 + W4.
 - **Soft dependencies:** ninguna.
-- **Start gate:** Wallet Agent + Monad PoC validado y guarded forwarding operativo.
-- **Exit gate:** P0 tools reales cubiertas: chain management, read-only, simulation, transfer/send, token allowance y typed-data handling.
+- **Start gate:** Wallet Agent + Monad PoC validado y guarded forwarding operativo (incluida la lectura de policy on-chain de W4).
+- **Exit gate:** P0 tools reales cubiertas: chain management, read-only, simulation, transfer/send, token allowance y typed-data handling, **todas validadas contra la policy on-chain del usuario**; además el **ciclo de vida del contrato de policy por usuario** (deploy/registro/update) cubierto como acción on-chain guardada.
 - **Unlocks hard:** W6 demo hardening.
 - **Can start early:** no para comportamiento final; solo investigación/fixtures.
 
@@ -139,8 +141,8 @@ Regla de paralelización: **W1 puede arrancar en paralelo con W0 usando un upstr
 
 - **Hard dependencies:** W5.
 - **Soft dependencies:** ninguna.
-- **Start gate:** P0 action coverage funcionando end-to-end.
-- **Exit gate:** demo reproducible desde máquina limpia, tests críticos pasan, audit/no-bypass probado y docs de operación listos.
+- **Start gate:** P0 action coverage funcionando end-to-end (incluida la policy on-chain per-user).
+- **Exit gate:** demo reproducible desde máquina limpia (incluye **deploy/seed del contrato de policy del usuario** en Monad Testnet), tests críticos pasan, audit/no-bypass probado y docs de operación listos; el runbook documenta deploy de contrato y lecturas RPC.
 - **Unlocks hard:** release/demo readiness.
 - **Can start early:** docs parciales sí; hardening final no.
 
@@ -290,27 +292,32 @@ W1 corre en paralelo con W0/W2 y se une en W4. W4 es el join point donde proxy p
 
 ## W4 — Guarded forward pipeline
 
-**Goal:** implement the actual proxy gate for `tools/call`.
+**Goal:** implement the actual proxy gate for `tools/call`, deciding `allow|block` against the **user's on-chain policy contract** on Monad Testnet (delivered by W3), not against a local JSON file.
 
 **Deliverables:**
 
 - `callInterceptor` implementing:
   ```text
-  registry -> required evidence -> simulation/inspection -> risk -> policy -> allow/block -> audit
+  registry -> required evidence -> simulation/inspection -> risk -> policy(on-chain) -> allow/block -> audit
   ```
 - Required-field validation from `ToolSemantics`.
 - Simulation/dry-run orchestration for write/signature/token-approval classes.
+- **On-chain policy resolution (consume W3):**
+  - `policyResolver`: identidad de usuario (interfaz definida por W3) → dirección del contrato de policy del usuario. Interfaz abstracta; se reconcilia con el shape real de W3.
+  - `onchainPolicyReader`: lectura del estado del contrato de policy vía RPC (`eth_call`/viem) con **caché + regla de frescura** y semántica **fail-closed** (si no se resuelve/lee → `block`).
 - `GuardedForwardRecord` with:
   - `forward_id`;
   - `audit_event_id`;
   - `candidate_tx_digest` when applicable;
   - `covered_fields`;
   - `idempotency_key` for broadcast/execution;
-  - policy/risk/simulation snapshots.
+  - risk/simulation snapshots;
+  - **`policy_source` on-chain:** `policy_contract_address`, `policy_chain_id=10143` y snapshot `policy_version`/`policy_block` (contra qué policy on-chain se decidió).
 - Canonical digest builder covering chain, account, target, value, data, tool name, normalized args, token/spender/amount and relevant gas/fee fields.
 - Forward path that sends the original `tools/call` to Wallet Agent only after `allow`.
 - Block path that never calls upstream and returns a safe explanation.
 - Idempotency store/result reuse for any broadcast/execution tool.
+- **Nuevos `SafeError`:** `USER_POLICY_UNRESOLVED`, `POLICY_CONTRACT_UNAVAILABLE` (sin filtrar detalles de RPC ni del contrato).
 
 **Acceptance:**
 
@@ -319,6 +326,9 @@ W1 corre en paralelo con W0/W2 y se une en W4. W4 es el join point donde proxy p
 - Digest mismatch blocks or forces re-simulation/re-evaluation.
 - Same `idempotency_key` cannot execute twice.
 - Every terminal path writes sanitized audit.
+- **La decisión `allow|block` se evalúa contra el contrato de policy on-chain del usuario y el audit/`GuardedForwardRecord` referencia su snapshot (address + version/block).**
+- **Si el contrato de policy del usuario está ausente o es ilegible, la decisión es `block` (fail-closed).**
+- **Aislamiento por usuario:** la policy del usuario A nunca gobierna acciones del usuario B.
 
 ---
 
@@ -348,13 +358,19 @@ W1 corre en paralelo con W0/W2 y se une en W4. W4 es el join point donde proxy p
   - opaque signatures block;
   - `sign_typed_data` only allows mapped typed data with expected domain/chain/verifyingContract/primaryType.
 - Monad RPC behavior handling for async send validation, no pending tx lookup, provisional `latest`, gas estimation caveats and provider limits.
+- **Per-user policy contract lifecycle (on-chain):**
+  - lectura de la policy on-chain del usuario, consumida por toda acción guardada (vía W4);
+  - **deploy/registro/update del contrato de policy del usuario tratado como acción on-chain guardada** (pasa por evidencia/simulación/digest/idempotencia y policy-sobre-policy: solo el dueño autorizado puede modificar su propia policy);
+  - **bootstrap** explícito: cómo se crea el primer contrato de policy del usuario, como acción guardada y auditada.
 
 **Acceptance:**
 
 - Claude can use Compass to perform read-only calls without direct Wallet Agent access.
-- A safe Monad Testnet action forwards only after registry/evidence/simulation/policy pass.
+- A safe Monad Testnet action forwards only after registry/evidence/simulation/**on-chain policy** pass.
 - Dangerous allowance and private-key/key-management tools are blocked before upstream.
-- Audit includes decision, digest when applicable, policy snapshot and upstream result/error.
+- Audit includes decision, digest when applicable, **on-chain policy snapshot (contract address + version/block)** and upstream result/error.
+- **Las allowances finitas se validan contra las allowlists declaradas en el contrato de policy on-chain del usuario; unlimited bloquea antes del upstream.**
+- **El update del contrato de policy del usuario se ejecuta como acción guardada (digest + idempotencia) y queda auditado; el aislamiento por usuario está probado.**
 
 ---
 
@@ -364,20 +380,21 @@ W1 corre en paralelo con W0/W2 y se une en W4. W4 es el join point donde proxy p
 
 **Deliverables:**
 
-- Demo policy file and chain config examples.
+- Demo chain config examples and a **per-user policy contract** seed/config (la policy de demo vive on-chain, no como archivo local de reglas).
 - Host setup instructions showing Compass only, no direct Wallet Agent MCP.
 - End-to-end smoke script:
   - start Compass;
   - connect Wallet Agent upstream;
   - configure Monad Testnet;
+  - **deploy/seed del contrato de policy del usuario en Monad Testnet** (acción guardada);
   - read wallet state/balance;
   - simulate/dry-run;
-  - forward safe action;
-  - block dangerous allowance;
-  - inspect audit.
-- Tests for registry, policy, blocked upstream calls, digest, idempotency and audit redaction.
-- Runbook for Monad RPC provider choice and known RPC caveats.
-- Known limitations and ADR list for anything not validated.
+  - **forward de acción segura permitida por la policy on-chain**;
+  - **block de allowance peligrosa según la policy on-chain**;
+  - inspect audit (incluye la **referencia al contrato de policy**: address + version/block).
+- Tests for registry, **on-chain policy read**, blocked upstream calls, digest, idempotency and audit redaction; **fail-closed ante contrato de policy no disponible**; **aislamiento por usuario**; snapshot del contrato de policy en audit/digest; update guardado del contrato.
+- Runbook for Monad RPC provider choice and known RPC caveats, **más pasos de deploy del contrato de policy (foundry/hardhat) y lecturas `eth_call`**.
+- Known limitations and ADR list for anything not validated, **incluyendo el modelo de policy on-chain per-user, la identidad de usuario (pendiente de W3), costo/latencia de lecturas on-chain y la semántica fail-closed**.
 
 **Acceptance:**
 
@@ -385,6 +402,7 @@ W1 corre en paralelo con W0/W2 y se une en W4. W4 es el join point donde proxy p
 - Critical tests pass.
 - Reviewers can verify the proxy boundary without reading product history.
 - No secrets are read, logged, exported or committed.
+- **La demo muestra decisiones `allow|block` gobernadas por el contrato de policy on-chain del usuario, con la referencia al contrato visible en el audit.**
 
 ---
 
@@ -394,8 +412,8 @@ W1 corre en paralelo con W0/W2 y se une en W4. W4 es el join point donde proxy p
 - W1 can start immediately with mocked upstream.
 - W2 can start with provisional entries, but final hashes wait for W0.
 - W3 can start once W2 shape exists.
-- W4 should stay single-threaded because it joins proxy, registry, policy, digest, idempotency and audit.
-- W5 should be narrow and evidence-driven; each tool class can be validated independently after W4.
+- W4 should stay single-threaded because it joins proxy, registry, **policy on-chain (lectura del contrato per-user)**, digest, idempotency and audit.
+- W5 should be narrow and evidence-driven; each tool class can be validated independently after W4. El **ciclo de vida del contrato de policy** (deploy/update) se cubre como su propia acción guardada.
 - W6 is final hardening, not a place to introduce new architecture.
 
 ## Explicitly out of P0
@@ -419,10 +437,10 @@ No construir en esta wave chain:
 1. W0: correr PoC Wallet Agent + Monad y guardar schemas.
 2. W1: crear proxy MCP server/client con upstream mock.
 3. W2: implementar registry con hashes y tests de drift.
-4. W3: implementar policy/risk/audit base.
-5. W4: implementar guarded forwarding con digest e idempotencia.
-6. W5: cubrir tools P0 reales contra Wallet Agent + Monad Testnet.
-7. W6: endurecer demo, docs, tests y no-bypass proof.
+4. W3: implementar policy/risk/audit base (incluye el contrato de policy on-chain per-user y la identidad de usuario).
+5. W4: implementar guarded forwarding con digest e idempotencia, decidiendo contra la policy on-chain del usuario (fail-closed).
+6. W5: cubrir tools P0 reales contra Wallet Agent + Monad Testnet y el ciclo de vida del contrato de policy.
+7. W6: endurecer demo (deploy/seed de policy on-chain), docs, tests y no-bypass proof.
 
 ## Fuentes oficiales usadas
 
@@ -430,5 +448,7 @@ No construir en esta wave chain:
 - Monad MCP guide: `https://docs.monad.xyz/guides/monad-mcp.md`
 - Monad Testnet info: `https://docs.monad.xyz/developer-essentials/testnets.md`
 - Monad JSON-RPC overview: `https://docs.monad.xyz/reference/json-rpc/overview.md`
+- Monad JSON-RPC `eth_call` (lectura de estado del contrato de policy): `https://docs.monad.xyz/reference/json-rpc/api.md`
+- Monad smart contract deploy (contrato de policy on-chain): `https://docs.monad.xyz/guides/deploy-smart-contract/index.md`
 - Repo source of truth: `docs/constitution.md`
 - Product input: `compass_product_spec_monad_mcp_proxy_v0.2.md`
