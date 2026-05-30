@@ -1,0 +1,9 @@
+docs/development-waves.md
+  ai_agent 40-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "6a3dd42025e95aa59a72f99cd784822b4600eecb",
+  "prompts": {}
+}
