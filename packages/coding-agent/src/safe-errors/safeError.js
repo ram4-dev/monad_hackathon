@@ -39,6 +39,9 @@ const SAFE_MESSAGES = Object.freeze({
   LLM_SAFETY_UNAVAILABLE: 'Final safety review is unavailable; request blocked.',
   UPSTREAM_UNAVAILABLE: 'The upstream is not available.',
   UPSTREAM_ERROR: 'The upstream returned an error.',
+  // Wave 5 — action coverage / policy contract lifecycle
+  POLICY_OWNER_ONLY: 'Only the policy owner may modify this policy.',
+  MONAD_RPC_UNAVAILABLE: 'Monad RPC is unavailable; request blocked.',
 });
 
 function debugRef(code) {
