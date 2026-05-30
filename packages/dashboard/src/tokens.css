@@ -1,0 +1,155 @@
+/* ============================================================
+   COMPASS — design tokens
+   Dark Monad palette + Mercado Envios discipline
+   (Montserrat, 8px grid, sharp corners, tracked uppercase labels)
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ===== LIGHT THEME (default) ===== */
+  --monad-purple: #836EF9;
+  --monad-purple-bright: #5B43D6;
+  --monad-purple-dim: #6450E0;
+  --monad-blue: #200052;
+  --monad-berry: #A0055D;
+  --monad-offwhite: #FBFAF9;
+
+  --bg: #F4F4F8;
+  --bg-grid: #FFFFFF;
+  --surface: #FFFFFF;
+  --surface-2: #F4F4F8;
+  --surface-3: #E9E9F0;
+  --inset: #FAFAFC;
+  --hover: rgba(20,20,45,0.028);
+
+  --rule: rgba(20,20,45,0.09);
+  --rule-strong: rgba(20,20,45,0.16);
+  --rule-violet: rgba(131,110,249,0.40);
+
+  --fg: #23232E;
+  --fg-strong: #0E0E18;
+  --fg-muted: #62626F;
+  --fg-dim: #9494A2;
+
+  --allow: #0F9D6B;
+  --allow-dim: #0C7E56;
+  --allow-bg: rgba(15,157,107,0.10);
+  --block: #E03E3E;
+  --block-dim: #BC2E2E;
+  --block-bg: rgba(224,62,62,0.09);
+  --approve: #C77A0A;
+  --approve-dim: #A6650A;
+  --approve-bg: rgba(199,122,10,0.11);
+
+  --in: #0F9D6B;
+  --out: #E03E3E;
+
+  --scrim: rgba(20,20,40,0.34);
+
+  --font-display: 'Montserrat', system-ui, sans-serif;
+  --font-body: 'Montserrat', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --ls-badge: 0.28em;
+  --ls-label: 0.18em;
+  --ls-tight: -0.01em;
+
+  --s1: 8px;  --s2: 16px; --s3: 24px; --s4: 32px;
+  --s6: 48px; --s8: 64px;
+
+  --r0: 0px; --r-sm: 2px; --r-md: 4px;
+
+  --shadow-card: 0 1px 2px rgba(20,20,45,0.05);
+  --shadow-float: 0 18px 50px rgba(20,20,45,0.18);
+}
+
+/* ===== DARK THEME ===== */
+[data-theme="dark"] {
+  --monad-purple: #836EF9;
+  --monad-purple-bright: #A593FF;
+
+  --bg: #0A0A12;
+  --bg-grid: #0C0C16;
+  --surface: #12121E;
+  --surface-2: #171726;
+  --surface-3: #1E1E30;
+  --inset: #0D0D17;
+  --hover: rgba(255,255,255,0.02);
+
+  --rule: rgba(255,255,255,0.07);
+  --rule-strong: rgba(255,255,255,0.13);
+  --rule-violet: rgba(131,110,249,0.35);
+
+  --fg: #F4F3F8;
+  --fg-strong: #FFFFFF;
+  --fg-muted: #9A9AB4;
+  --fg-dim: #6B6B86;
+
+  --allow: #36D49A;
+  --allow-dim: #1C8C66;
+  --allow-bg: rgba(54,212,154,0.12);
+  --block: #FF5C6C;
+  --block-dim: #B83344;
+  --block-bg: rgba(255,92,108,0.12);
+  --approve: #FFB23E;
+  --approve-dim: #C98014;
+  --approve-bg: rgba(255,178,62,0.13);
+  --in: #36D49A;
+  --out: #FF5C6C;
+
+  --scrim: rgba(6,6,12,0.55);
+
+  --shadow-card: 0 1px 0 rgba(255,255,255,0.03), 0 8px 24px rgba(0,0,0,0.4);
+  --shadow-float: 0 16px 48px rgba(0,0,0,0.55);
+}
+
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; padding: 0; min-height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.mono { font-family: var(--font-mono); }
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--fg-dim);
+}
+.badge-track {
+  letter-spacing: var(--ls-badge);
+  text-transform: uppercase;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 0; border: 3px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: var(--fg-dim); }
+
+::selection { background: var(--monad-purple); color: #fff; }
+button { font-family: inherit; cursor: pointer; }
+
+@keyframes feedIn {
+  from { opacity: 0; transform: translateY(-8px); background: rgba(131,110,249,0.10); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulseDot {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@keyframes scan {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@keyframes drawerIn {
+  from { transform: translateX(28px); }
+  to { transform: translateX(0); }
+}
+.feed-in { animation: feedIn 0.5s cubic-bezier(.2,.7,.3,1); }
