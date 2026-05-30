@@ -31,6 +31,14 @@ const SAFE_MESSAGES = Object.freeze({
   DANGEROUS_TOOL_BLOCKED: 'Dangerous tool is blocked before policy.',
   SCHEMA_DRIFT: 'Tool schema drifted from the registry.',
   POLICY_ALLOWED: 'Policy allowed the request.',
+  // Wave 4 — guarded forward pipeline
+  USER_POLICY_UNRESOLVED: 'User policy could not be resolved.',
+  POLICY_CONTRACT_UNAVAILABLE: 'Policy contract is unavailable.',
+  DIGEST_MISMATCH: 'Candidate transaction digest did not match.',
+  LLM_SAFETY_BLOCKED: 'Final safety review blocked the request.',
+  LLM_SAFETY_UNAVAILABLE: 'Final safety review is unavailable; request blocked.',
+  UPSTREAM_UNAVAILABLE: 'The upstream is not available.',
+  UPSTREAM_ERROR: 'The upstream returned an error.',
 });
 
 function debugRef(code) {
