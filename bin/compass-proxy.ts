@@ -77,7 +77,24 @@ async function main(): Promise<void> {
   }
 
   const mirror = new ToolMirror(upstream);
-  const interceptor = new CallInterceptor(upstream, audit);
+
+  // W4/W5 guarded pipeline: enabled only when an on-chain policy contract is configured.
+  // Without it, the proxy keeps the W1/W2 behavior (registry-gated direct forward).
+  let guarded = null;
+  const policyAddress = process.env.POLICY_CONTRACT_ADDRESS;
+  const rpcUrl = process.env.MONAD_RPC_URL;
+  if (policyAddress && rpcUrl) {
+    const { buildGuardedRunner } = await import("../mcp/proxy/guardedPipeline.ts");
+    guarded = buildGuardedRunner({ rpcUrl, policyContractAddress: policyAddress });
+    audit.record({
+      action: guarded ? "proxy_started" : "upstream_unavailable",
+      result: guarded ? "success" : "failed",
+      source: "system",
+      metadata: { reason_code: guarded ? "guarded_pipeline_enabled" : "guarded_pipeline_config_invalid" },
+    });
+  }
+
+  const interceptor = new CallInterceptor(upstream, audit, guarded);
 
   const transport = new StdioServerTransport();
   await startProxyServer({ config, upstream, mirror, interceptor, audit }, transport);

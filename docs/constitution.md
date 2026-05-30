@@ -1,6 +1,6 @@
 # Compass Monad — Constitución del Repo
 
-**Estado:** v0.6 — P0 proxy-only, sin aprobaciones externas ni legado fuera de alcance  
+**Estado:** v0.7 — P0 proxy-only; policy on-chain per-user (ADR-0001) y capa final LLM veto-only (ADR-0002) ratificadas  
 **Fecha:** 2026-05-30  
 **Owner:** maintainers del repo  
 **Última validación externa:** 2026-05-30; Monad docs oficiales listadas en sección 14  
@@ -8,6 +8,13 @@
 **Producto:** Compass — MCP security proxy for AI agents executing on Monad
 
 Esta constitución define las decisiones que no queremos rediscutir en cada archivo. Si código, prompts, specs o ADRs contradicen este documento, primero se actualiza esta constitución o se crea un ADR/RFC explícito.
+
+## 0. Enmiendas v0.7 (ratificadas)
+
+Estas dos enmiendas actualizan el modelo P0 y prevalecen sobre el texto previo donde haya tensión. Detalle en `docs/adr/`.
+
+- **ADR-0001 — Policy on-chain per-user (fuente de verdad).** La policy deja de ser un JSON local y vive **on-chain en Monad Testnet como un contrato de policy por usuario** (`CompassPolicy`, `chain_id=10143`). Compass resuelve la identidad del usuario, **lee** su contrato de policy por RPC para decidir `allow|block`, y es **fail-closed** si no puede resolverla/leerla. Actualizar la policy de un usuario es una acción on-chain guardada y **owner-only** (policy-over-policy). Donde este documento menciona `policy.monad.json` / `COMPASS_POLICY_PATH` / `DemoPolicy` local, eso pasa a ser **binding/ejemplo de lectura**, no la fuente de reglas.
+- **ADR-0002 — Capa final de seguridad por LLM (veto-only, fail-closed).** Después de que el piso determinístico (registry → evidencia → simulación → risk → policy on-chain) da `allow`, una **revisión final por LLM** recibe contexto sanitizado y puede **vetar** (convertir `allow` en `block`). **Nunca** puede ampliar un `block` determinístico a `allow`; el piso determinístico sigue siendo la autoridad. Es fail-closed (no disponible/ambiguo → block) y no recibe secretos. Esto refina —no contradice— la regla de que el LLM no es autoridad única.
 
 ## Quick read
 
@@ -35,7 +42,7 @@ Esta constitución define las decisiones que no queremos rediscutir en cada arch
 | Runtime decision  | `allow` forwardea al upstream. `block` corta la llamada y devuelve explicación segura. No existe aprobación externa interactiva en P0.                       |
 | ERC20 allowances  | `approve_token` limitado puede forwardearse solo si `token + spender + amount + chain` están permitidos explícitamente por policy. Todo lo demás se bloquea. |
 | Bypass            | El host MCP de demo no debe tener Wallet Agent configurado en paralelo. Si Claude ve Wallet Agent directo, Compass queda bypassed.                           |
-| Seguridad crítica | Determinística/reglas verificables primero; el LLM puede explicar, no decidir como autoridad final.                                                          |
+| Seguridad crítica | Determinística/reglas verificables primero (autoridad). El LLM **no es autoridad única**, pero (ADR-0002) puede actuar como **capa final veto-only**: solo bloquea un `allow` determinístico, nunca lo amplía; fail-closed. |
 
 ---
 

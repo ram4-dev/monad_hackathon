@@ -51,14 +51,48 @@ type GuardedForwardModule = {
   IdempotencyStore: new (opts?: { now?: () => number }) => GuardedForwardParams["idempotencyStore"];
 };
 
+export type CoverToolCallParams = {
+  toolName: string;
+  args?: Record<string, unknown>;
+  ctx?: Record<string, unknown>;
+  policySource?: GuardedForwardParams["policySource"];
+  simulation?: Record<string, unknown>;
+  consent?: Record<string, unknown>;
+  llm?: GuardedForwardParams["llm"];
+  env?: Record<string, string | undefined>;
+  forward: GuardedForwardParams["forward"];
+  idempotencyStore?: GuardedForwardParams["idempotencyStore"];
+  auditWriter?: GuardedForwardParams["auditWriter"];
+};
+
+export type CoverToolCallResult =
+  | GuardedForwardResult
+  | { decision: "skipped"; reason: string; missing_consent?: string[]; record: Record<string, unknown> };
+
 const guardedForwardModule = require("../../packages/coding-agent/src/guarded-forward/index.js") as GuardedForwardModule;
 const idempotencyModule = require("../../packages/coding-agent/src/idempotency/index.js") as {
   IdempotencyStore: GuardedForwardModule["IdempotencyStore"];
+};
+const actionCoverageModule = require("../../packages/coding-agent/src/action-coverage/index.js") as {
+  coverToolCall: (params: CoverToolCallParams) => Promise<CoverToolCallResult>;
+};
+const policySourceModule = require("../../packages/coding-agent/src/policy-source/index.js") as {
+  createPolicySourceConfig: (input?: unknown, opts?: unknown) => { ok: boolean; config?: unknown; error?: unknown };
 };
 
 /** Run the W4 guarded-forward pipeline for one host tools/call. */
 export function guardedForward(params: GuardedForwardParams): Promise<GuardedForwardResult> {
   return guardedForwardModule.guardedForward(params);
+}
+
+/** Run the W5 action-coverage entry (evidence extraction + consent gate + guarded forward). */
+export function coverToolCall(params: CoverToolCallParams): Promise<CoverToolCallResult> {
+  return actionCoverageModule.coverToolCall(params);
+}
+
+/** Build a W3 policy-source config (binding validation) from env/options. */
+export function createPolicySourceConfig(input?: unknown, opts?: unknown): { ok: boolean; config?: unknown; error?: unknown } {
+  return policySourceModule.createPolicySourceConfig(input, opts);
 }
 
 export const IdempotencyStore = idempotencyModule.IdempotencyStore;
