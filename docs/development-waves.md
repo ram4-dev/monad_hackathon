@@ -24,29 +24,29 @@ Reglas que condicionan todas las waves:
 W0 External validations
   ├─> W1 Contracts, config, storage
   │     ├─> W2 Auth, bootstrap, pairing, setup web
-  │     │     ├─> W3 Dynamic delegation + wallet state
+  │     │     ├─> W3 Secure delegation registration + wallet state
   │     │     │     └─> W5 Execution gateway
   │     │     └─> W6 MCP tools and local runtime
   │     └─> W4 Guarded review pipeline
   │           ├─> W5 Execution gateway
   │           └─> W6 MCP tools and local runtime
-  └─> W3 Dynamic delegation + wallet state
+  └─> W3 Secure delegation registration + wallet state
 
 W5 + W6 -> W7 Demo hardening and release readiness
 ```
 
 ## Wave summary
 
-| Wave | Name                                 | Hard dependencies                                         | Soft dependencies                                           | Unlocks                                                                     |
-| ---- | ------------------------------------ | --------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------- |
-| W0   | External validations                 | none                                                      | none                                                        | Safe technical assumptions for Monad/Dynamic/delegation.                    |
-| W1   | Contracts, config, storage           | none                                                      | W0 for final chain values                                   | Shared schemas, DB base, redaction and test foundation.                     |
-| W2   | Auth, bootstrap, pairing, setup web  | W1                                                        | W0 for final URLs/chain copy                                | MCP sessions, scoped tokens, setup URL, web onboarding.                     |
-| W3   | Dynamic delegation + wallet state    | W0, W1, W2                                                | none                                                        | Ready wallet state and signer capability behind guarded backend interfaces. |
-| W4   | Guarded review pipeline              | W1, W2                                                    | W3 for real wallet/delegation context; can start with mocks | `review_intent` safety gate with digest, risk, policy and audit.            |
-| W5   | Execution gateway                    | W2, W3, W4                                                | none                                                        | Idempotent guarded signing/broadcast for reviewed transactions.             |
-| W6   | MCP tools and local runtime          | W2 for bootstrap/status; W3 wallet; W4 review; W5 execute | none                                                        | Claude Code demo surface.                                                   |
-| W7   | Demo hardening and release readiness | W0–W6                                                     | none                                                        | End-to-end confidence, docs, tests and reviewable demo.                     |
+| Wave | Name                                          | Hard dependencies                                         | Soft dependencies                                           | Unlocks                                                                                      |
+| ---- | --------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| W0   | External validations                          | none                                                      | none                                                        | Safe technical assumptions for Monad/Dynamic/delegation.                                     |
+| W1   | Contracts, config, storage                    | none                                                      | W0 for final chain values                                   | Shared schemas, DB base, redaction and test foundation.                                      |
+| W2   | Auth, bootstrap, pairing, setup web           | W1                                                        | W0 for final URLs/chain copy                                | MCP sessions, scoped tokens, setup URL, web onboarding.                                      |
+| W3   | Secure delegation registration + wallet state | W0, W1, W2                                                | none                                                        | Active delegation registry, safe wallet state and backend-only signer adapter; no execution. |
+| W4   | Guarded review pipeline                       | W1, W2                                                    | W3 for real wallet/delegation context; can start with mocks | `review_intent` safety gate with digest, risk, policy and audit.                             |
+| W5   | Execution gateway                             | W2, W3, W4                                                | none                                                        | Idempotent guarded signing/broadcast for reviewed transactions.                              |
+| W6   | MCP tools and local runtime                   | W2 for bootstrap/status; W3 wallet; W4 review; W5 execute | none                                                        | Claude Code demo surface.                                                                    |
+| W7   | Demo hardening and release readiness          | W0–W6                                                     | none                                                        | End-to-end confidence, docs, tests and reviewable demo.                                      |
 
 ## Dependency details
 
@@ -55,7 +55,7 @@ W5 + W6 -> W7 Demo hardening and release readiness
 | W0   | none               | It validates external assumptions before we encode them into architecture.                                                                                  | yes — it is the first track.                                                            |
 | W1   | none hard; W0 soft | Schemas, DB and config can be scaffolded with provisional Monad values, but final chain/signing constants should wait for W0 evidence.                      | yes, with provisional config and TODOs tied to W0.                                      |
 | W2   | W1                 | Bootstrap, pairing, token hashing, scopes, sessions and audit need W1 schemas/storage/redaction first.                                                      | no for production routes; only sketches/mocks.                                          |
-| W3   | W0, W1, W2         | Delegation needs validated Dynamic/Monad behavior from W0, delegation storage schemas from W1, and authenticated pairing from W2.                           | no for real delegation; yes for mocked signer interface only.                           |
+| W3   | W0, W1, W2         | Delegation needs validated Dynamic/Monad behavior from W0, webhook/delegation schemas plus encryption/redaction from W1, and authenticated pairing from W2. | no for real delegation; yes only for mocked signer interface and wallet-state contract. |
 | W4   | W1, W2             | Review needs shared action/risk/policy schemas from W1 and authenticated MCP/session context from W2.                                                       | yes, if wallet state/delegation is mocked until W3 lands.                               |
 | W5   | W2, W3, W4         | Execution requires authenticated scoped tokens from W2, active delegated signer/wallet from W3, and a valid `review_id` + digest + policy snapshot from W4. | no — this is the critical safety boundary.                                              |
 | W6   | W2, W3, W4, W5     | MCP tools wrap the previous backend capabilities: status/bootstrap from W2, wallet state from W3, review from W4 and execute from W5.                       | yes, tool-by-tool: status after W2, wallet after W3, review after W4, execute after W5. |
@@ -67,7 +67,7 @@ W5 + W6 -> W7 Demo hardening and release readiness
 W0 validations
   -> W1 contracts/storage
   -> W2 auth/pairing
-  -> W3 delegation/wallet state
+  -> W3 secure delegation registration/wallet state
   -> W5 execution gateway
   -> W6 executable MCP demo
   -> W7 hardening
@@ -120,20 +120,50 @@ W4 runs after W1/W2 and can progress in parallel with W3 using mocks. W5 is the 
 
 **Acceptance:** `mcp_session_id` alone cannot retrieve a token, final token is scoped and stored hashed server-side, consumed polling cannot be reused, and setup/bootstrap routes cannot execute intents.
 
-## W3 — Dynamic delegation + wallet state
+## W3 — Secure Dynamic delegation registration + wallet state
 
-**Goal:** register delegated signing capability safely, without exposing delegated credentials.
+**Goal:** register delegated signing capability safely, expose wallet readiness, and keep all signing power behind a backend-only boundary. W3 unlocks signer capability for W5, but **does not execute, sign arbitrary payloads, or expose signing through public APIs/MCP tools**.
 
 **Deliverables:**
 
-- Dynamic delegation webhook route with raw-body signature verification.
-- Idempotent webhook processing by `eventId`.
-- Encrypted storage for delegated wallet API key/key share; no plaintext logs or audit metadata.
-- Delegation registry with `active | revoked | expired` status.
-- `GET /api/wallet/state` for MCP token or web session.
-- Delegated signer adapter behind a backend-only interface.
+- Webhook ingestion:
+  - capture the raw request body before JSON parsing;
+  - verify Dynamic signature against the raw body before trusting or persisting event data;
+  - reject invalid signatures with safe errors and no sensitive persistence;
+  - process `wallet.delegation.created` idempotently by `eventId`;
+  - record `webhook_events` as `received | processed | ignored | failed` with sanitized errors only.
+- Pairing match:
+  - match the verified webhook to a pending `pairing_session` by `dynamic_user_id + wallet_id` or `dynamic_user_id + publicKey/wallet_address`;
+  - never activate delegation when the webhook is orphaned, mismatched, expired or already consumed;
+  - never emit the final MCP token unless the matched pairing reaches `ready`.
+- Credential storage:
+  - decrypt delegated materials only after signature verification and successful pairing match;
+  - store delegated wallet API key/key share encrypted at rest using Compass-owned encryption;
+  - associate an initial policy snapshot and `active | revoked | expired` delegation status;
+  - ensure delegated materials never appear in logs, responses, audit metadata or test snapshots.
+- Revocation and expiry:
+  - handle Dynamic revocation events when available, plus an internal revoke operation;
+  - mark delegations `revoked` or `expired` without deleting audit history;
+  - make inactive delegations unusable by the signer adapter.
+- Wallet state:
+  - implement `GET /api/wallet/state` for MCP token or web session;
+  - return only safe fields: wallet address, chain id, balances needed for the demo, delegation status and readiness;
+  - never return secrets, raw webhook payloads, delegated materials or token plaintext.
+- Signer adapter boundary:
+  - provide a backend-only delegated signer adapter for W5;
+  - do not create any public route, MCP tool, CLI command or generic helper that signs arbitrary payloads;
+  - make the adapter require an active delegation and reject `missing | revoked | expired` states.
 
-**Acceptance:** duplicate webhook events do not create duplicate delegations, wallet state reports ready/missing/revoked accurately, and tests prove delegated secrets never enter responses, audit events or public logs.
+**Acceptance:**
+
+- Invalid webhook signatures persist no delegation and return safe errors.
+- Duplicate `eventId` processing is idempotent.
+- Delegation activates only when verified webhook fields match an existing pending pairing.
+- Orphaned, mismatched, expired or already-consumed webhooks never activate signing capability.
+- Delegated credentials are encrypted at rest and never appear in responses, audit events, logs or snapshots.
+- Revoked or expired delegations cannot be used by the signer adapter.
+- Wallet state reports `active | missing | revoked | expired` accurately.
+- No public API, MCP tool, CLI command or generic helper can call delegated signing directly.
 
 ## W4 — Guarded review pipeline
 
@@ -160,7 +190,7 @@ W4 runs after W1/W2 and can progress in parallel with W3 using mocks. W5 is the 
 - `POST /api/intents/execute` requiring token scope, `review_id` and `idempotency_key`.
 - Recompute/retrieve reviewed transaction and verify digest match before signing.
 - Idempotency lock/result reuse for `(mcp_session_id, idempotency_key)`.
-- Delegated signing via W3 signer adapter.
+- Delegated signing through the W3 backend-only signer adapter; no direct route/tool access.
 - Broadcast via Monad RPC and safe handling for failed broadcasts.
 - Audit events for signed, broadcast, blocked and failed outcomes.
 
@@ -227,7 +257,7 @@ These remain valid product directions, but are not part of the Compass Monad P0 
 2. Land W1 schemas/config/storage with tests.
 3. Build W2 bootstrap/pairing and minimal setup web.
 4. Build W4 review pipeline against mocked signer/wallet state.
-5. Build W3 Dynamic delegation and wallet state.
+5. Build W3 secure Dynamic delegation registration and wallet state.
 6. Build W5 execution gateway.
 7. Wire W6 MCP end-to-end.
 8. Finish W7 hardening/demo docs.
