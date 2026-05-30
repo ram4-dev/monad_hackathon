@@ -1,0 +1,45 @@
+{
+  "_comment": "Live CompassPolicy deployment on Monad Testnet (W6). Sanitized, non-secret evidence only. No private keys, RPC credentials, or raw signed transactions are recorded here.",
+  "network_name": "Monad Testnet",
+  "chain_id": 10143,
+  "policy_contract_address": "0xf46fE939a947b6b300D9727ef94A2AbbCE07586C",
+  "deploy_tx_hash": "0x3408a2a4963ab27a4be9e55a7288fc747ce0207669bfe43215c583615f284882",
+  "deploy_block_number": 35123811,
+  "deploy_status": "success",
+  "owner_address": "0xAaCF452ef1385B2c5555F1097b4915B54359550E",
+  "policy_id": "0x4483c526744fccdc9109ae4c157213b9dd7e173c311199ff11e2fdbb70a53116",
+  "policy_version": "1",
+  "schema_id": "0xbff749158587599401933b69539ef72bfaebb403678a1d1db445a6e9a3bac599",
+  "content_hash": "0x8f85dcacbc82173cd2c1f32ff9d602364460ff312f1ddbdb52918a02e876193d",
+  "frozen": false,
+  "allowed_tool_count": 5,
+  "allowed_tools_demo": [
+    "get_balance",
+    "get_wallet_info",
+    "get_token_balance",
+    "transfer_token",
+    "approve_token"
+  ],
+  "flags": {
+    "block_unlimited_token_approvals": true,
+    "allow_unknown_tools": false,
+    "require_simulation_for_writes": true,
+    "frozen": false
+  },
+  "caps": {
+    "max_native_transfer_wei": "1000000000000000000",
+    "max_erc20_transfer_atomic": "1000000",
+    "max_gas_cost_wei": "100000000000000000",
+    "max_fee_per_gas_wei": "0"
+  },
+  "post_deploy_read_checks": {
+    "code_present": true,
+    "policy_identity_readable": true,
+    "schema_id_matches_expected": true,
+    "chain_id_matches": true
+  },
+  "rpc_provider": "https://testnet-rpc.monad.xyz",
+  "verification_status": "not_submitted",
+  "secret_material_logged": false,
+  "demo_note": "Demo allowlist addresses (token/recipient/spender) use the deployer address as a placeholder; replace with real ERC20/recipient/spender via a guarded policy update (W5 lifecycle) for a full mutation demo."
+}
