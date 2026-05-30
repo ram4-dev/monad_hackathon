@@ -8,6 +8,11 @@ node_modules/
 out/
 dist/
 build/
+
+# Foundry
+cache/
+broadcast/
+compass-policy-deploy/
 .turbo/
 .vercel/
 

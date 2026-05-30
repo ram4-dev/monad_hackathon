@@ -1,0 +1,12 @@
+{
+  "_comment": "W6 demo: policy lives ON-CHAIN (CompassPolicy on Monad Testnet), not in this file. This example only records the binding Compass uses to READ the policy via RPC. Real values go in .env / the deployment artifact; never commit secrets or credentialed RPC URLs.",
+  "policy_source": "onchain",
+  "chain_id": 10143,
+  "network_name": "Monad Testnet",
+  "policy_contract_address": "0x0000000000000000000000000000000000000000",
+  "expected_schema_id": "0xbff749158587599401933b69539ef72bfaebb403678a1d1db445a6e9a3bac599",
+  "rpc_url_env": "MONAD_RPC_URL",
+  "min_policy_version": "1",
+  "read_timeout_ms": 15000,
+  "fail_closed": true
+}
