@@ -1,0 +1,69 @@
+{
+  "$id": "https://compass.local/w0/blocker-entry",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "adr_candidate": {
+      "type": "boolean"
+    },
+    "blocker_id": {
+      "type": "string"
+    },
+    "blocker_ids": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "capture_id": {
+      "type": "string"
+    },
+    "captured_at": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "evidence_refs": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "impacted_waves": {
+      "type": "array"
+    },
+    "next_decision": {
+      "type": "string"
+    },
+    "sanitization": {
+      "type": "object"
+    },
+    "schema_version": {
+      "type": "string"
+    },
+    "severity": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "blocker_id",
+    "domain",
+    "summary",
+    "status",
+    "severity",
+    "impacted_waves",
+    "next_decision",
+    "adr_candidate",
+    "evidence_refs"
+  ],
+  "title": "W0 Blocker Entry",
+  "type": "object"
+}

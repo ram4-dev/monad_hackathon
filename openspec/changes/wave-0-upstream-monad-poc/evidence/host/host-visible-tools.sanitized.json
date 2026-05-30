@@ -1,0 +1,22 @@
+{
+  "blocker_ids": [
+    "W0-BLOCKER-007"
+  ],
+  "boundary_statement": "Wallet Agent is only an upstream candidate behind Compass; Compass is the only intended host-facing MCP execution surface for demo hosts.",
+  "capture_id": "w0-20260530T153616Z",
+  "captured_at": "2026-05-30T15:40:32Z",
+  "evidence_refs": [
+    "evidence/host/no-bypass.md"
+  ],
+  "host_visible_entries": [],
+  "safe_cause": "No sanitized operator-provided host config/tool listing was available; secret-bearing host config files were not read.",
+  "safe_host_config_inspected": false,
+  "sanitization": {
+    "host_config_files_read": false,
+    "raw_transcripts_persisted": false,
+    "secret_sources_read": false
+  },
+  "schema_version": "w0.host_no_bypass.v1",
+  "status": "blocked",
+  "wallet_agent_direct_entry_found": null
+}

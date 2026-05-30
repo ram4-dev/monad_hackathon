@@ -1,0 +1,55 @@
+{
+  "descriptor": {
+    "description": "Simulate a contract transaction before executing to check if it will succeed",
+    "inputSchema": {
+      "properties": {
+        "address": {
+          "description": "Address to simulate from (defaults to connected wallet)",
+          "type": "string"
+        },
+        "args": {
+          "description": "Function arguments",
+          "items": {},
+          "type": "array"
+        },
+        "contract": {
+          "description": "Contract name from Wagmi config or address",
+          "type": "string"
+        },
+        "function": {
+          "description": "Function name to simulate",
+          "type": "string"
+        },
+        "value": {
+          "description": "ETH value to send with transaction (optional)",
+          "type": "string"
+        }
+      },
+      "required": [
+        "contract",
+        "function"
+      ],
+      "type": "object"
+    },
+    "name": "simulate_transaction"
+  },
+  "evidence_refs": [
+    "evidence/upstream/wallet-agent-tools-list.sanitized.json"
+  ],
+  "readiness": {
+    "blocker_ids": [],
+    "missing_fields": [],
+    "registry_ready": true
+  },
+  "sanitization": {
+    "raw_transcripts_persisted": false,
+    "redactions_applied": [],
+    "secret_sources_read": false
+  },
+  "schema_version": "w0.tool_schema_fixture.v1",
+  "status": "captured",
+  "tool_name": "simulate_transaction",
+  "tool_present": true,
+  "upstream": "wallet_agent",
+  "upstream_source": "https://github.com/wallet-agent/wallet-agent"
+}

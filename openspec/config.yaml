@@ -1,0 +1,49 @@
+project: compass_monad
+project_display_name: Compass Monad
+created_for_change: wave-0-upstream-monad-poc
+
+sdd:
+  execution_mode: interactive
+  artifact_store: both
+  pr_strategy: auto-forecast
+  review_budget_lines: null # User selected no fixed cap; still warn on multi-area/high-risk diffs.
+
+strict_tdd: false
+test_runner: null
+testing:
+  command: null
+  status: not_configured
+  notes:
+    - Repo is currently planning/docs-only; no package manager manifest or runnable test command was detected at SDD init time.
+    - Use evidence-based W0 verification for external PoC steps and enable strict_tdd once implementation scaffolding and a test runner exist.
+
+sources_of_truth:
+  - docs/constitution.md
+  - docs/development-waves.md
+  - compass_product_spec_monad_mcp_proxy_v0.2.md
+
+skills:
+  registry: .atl/skill-registry.md
+  required_for_monad_work:
+    - /Users/rcarnicer/Desktop/hackathon/compass_monad/.agents/skills/monad-development/SKILL.md
+
+rules:
+  proposal:
+    - Keep scope tied to W0 Upstream + Monad PoC unless the user approves expansion.
+    - Constitution overrides product spec and wave docs when conflicts appear.
+  spec:
+    - Express requirements as testable scenarios or verifiable PoC evidence.
+    - Mark external Wallet Agent or Monad RPC unknowns as blockers before W4/W5 can depend on them.
+  design:
+    - Do not introduce direct Wallet Agent host access; Compass remains the MCP security proxy boundary.
+    - Do not hardcode Monad chain/RPC/gas assumptions from memory; cite official Monad docs.
+  tasks:
+    - Separate local repo scaffolding from external validation steps.
+    - Forecast reviewer workload and integration risk even without a fixed line budget.
+  apply:
+    - Do not read secrets, .env files, private keys, tokens, credentials, or secret manager outputs.
+    - Record commands and evidence without logging secret values.
+    - Use standard mode until a runnable test command exists.
+  verify:
+    - Verify artifacts against docs/constitution.md and docs/development-waves.md.
+    - Record any unavailable external validation as an explicit blocker or ADR candidate.

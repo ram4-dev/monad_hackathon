@@ -1,0 +1,56 @@
+{
+  "$id": "https://compass.local/w0/host-no-bypass",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "blocker_ids": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "boundary_statement": {
+      "type": "string"
+    },
+    "capture_id": {
+      "type": "string"
+    },
+    "captured_at": {
+      "type": "string"
+    },
+    "evidence_refs": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "host_visible_entries": {
+      "type": "array"
+    },
+    "sanitization": {
+      "type": "object"
+    },
+    "schema_version": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "wallet_agent_direct_entry_found": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "capture_id",
+    "captured_at",
+    "status",
+    "boundary_statement",
+    "sanitization"
+  ],
+  "title": "W0 Host No-Bypass Evidence",
+  "type": "object"
+}

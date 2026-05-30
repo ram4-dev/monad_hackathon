@@ -1,0 +1,47 @@
+{
+  "descriptor": {
+    "description": "Approve ERC-20 token spending",
+    "inputSchema": {
+      "properties": {
+        "amount": {
+          "description": "Amount to approve (in token units, or 'max' for unlimited)",
+          "type": "string"
+        },
+        "spender": {
+          "description": "Address to approve for spending",
+          "type": "string"
+        },
+        "token": {
+          "description": "Token contract name, symbol (USDC), or address",
+          "type": "string"
+        }
+      },
+      "required": [
+        "token",
+        "spender",
+        "amount"
+      ],
+      "type": "object"
+    },
+    "name": "approve_token"
+  },
+  "evidence_refs": [
+    "evidence/upstream/wallet-agent-tools-list.sanitized.json"
+  ],
+  "readiness": {
+    "blocker_ids": [],
+    "missing_fields": [],
+    "registry_ready": true
+  },
+  "sanitization": {
+    "raw_transcripts_persisted": false,
+    "redactions_applied": [],
+    "secret_sources_read": false
+  },
+  "schema_version": "w0.tool_schema_fixture.v1",
+  "status": "captured",
+  "tool_name": "approve_token",
+  "tool_present": true,
+  "upstream": "wallet_agent",
+  "upstream_source": "https://github.com/wallet-agent/wallet-agent"
+}

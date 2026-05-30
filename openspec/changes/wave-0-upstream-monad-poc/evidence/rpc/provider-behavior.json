@@ -1,0 +1,134 @@
+{
+  "blocker_ids": [
+    "W0-BLOCKER-008"
+  ],
+  "capture_id": "w0-20260530T153616Z",
+  "captured_at": "2026-05-30T15:40:32Z",
+  "fallback_providers": [
+    {
+      "chain_id_status": "ok",
+      "label": "ankr-public",
+      "public_url": "https://rpc.ankr.com/monad_testnet"
+    },
+    {
+      "chain_id_status": "ok",
+      "label": "monadinfra-public",
+      "public_url": "https://rpc-testnet.monadinfra.com"
+    }
+  ],
+  "limitations": [
+    "Single short samples only; no sustained reliability/rate-limit test.",
+    "No authenticated or secret provider URLs used.",
+    "No broadcast or mutation performed."
+  ],
+  "observations": [
+    {
+      "finality_basis": "not_applicable",
+      "latency_ms": 673,
+      "method": "eth_chainId",
+      "provider": "quicknode-public",
+      "result": "0x279f",
+      "status": "ok"
+    },
+    {
+      "finality_basis": "not_applicable",
+      "latency_ms": 566,
+      "method": "eth_chainId",
+      "provider": "ankr-public",
+      "result": "0x279f",
+      "status": "ok"
+    },
+    {
+      "finality_basis": "not_applicable",
+      "latency_ms": 721,
+      "method": "eth_chainId",
+      "provider": "monadinfra-public",
+      "result": "0x279f",
+      "status": "ok"
+    },
+    {
+      "finality_basis": "implicit latest/provisional",
+      "latency_ms": 565,
+      "method": "eth_blockNumber",
+      "provider": "quicknode-public",
+      "result": "0x21761d6",
+      "status": "ok"
+    },
+    {
+      "finality_basis": "latest/provisional",
+      "latency_ms": 469,
+      "method": "eth_getBlockByNumber(latest,false)",
+      "provider": "quicknode-public",
+      "result": {
+        "hash_present": true,
+        "number": "0x21761d7"
+      },
+      "status": "ok"
+    },
+    {
+      "finality_basis": "finalized",
+      "latency_ms": 471,
+      "method": "eth_getBlockByNumber(finalized,false)",
+      "provider": "quicknode-public",
+      "result": {
+        "hash_present": true,
+        "number": "0x21761d6"
+      },
+      "status": "ok"
+    },
+    {
+      "finality_basis": "implicit latest/provisional",
+      "latency_ms": 480,
+      "method": "eth_gasPrice",
+      "provider": "quicknode-public",
+      "result": "0x17bfac7c00",
+      "status": "ok"
+    },
+    {
+      "finality_basis": "implicit latest/provisional",
+      "latency_ms": 469,
+      "method": "eth_maxPriorityFeePerGas",
+      "provider": "quicknode-public",
+      "result": "0x77359400",
+      "status": "ok"
+    },
+    {
+      "candidate": "zero-value transfer between zero-address placeholders",
+      "finality_basis": "simulation/read-like",
+      "latency_ms": 479,
+      "method": "eth_estimateGas",
+      "provider": "quicknode-public",
+      "result": "0x5208",
+      "status": "ok"
+    }
+  ],
+  "official_caveats": [
+    {
+      "note": "Public RPC candidates and rate limits: QuickNode 50 rps and 25 rps for eth_call/eth_estimateGas; Ankr 300 requests/10s and 12000/10 min; Monad Foundation 20 rps and no batch.",
+      "source": "https://docs.monad.xyz/developer-essentials/testnets.md"
+    },
+    {
+      "note": "Monad is Geth-compatible but has async send validation, no pending transaction results through eth_getTransactionByHash, provisional latest, provider-specific eth_call/eth_estimateGas limits, and trace option requirements.",
+      "source": "https://docs.monad.xyz/reference/json-rpc/overview.md"
+    },
+    {
+      "note": "Monad charges the full transaction gas limit, is EIP-1559-compatible, has 100 MON-gwei minimum base fee, 200M block gas limit, and 30M transaction gas limit.",
+      "source": "https://docs.monad.xyz/developer-essentials/gas-pricing.md"
+    },
+    {
+      "note": "Monad supports Ethereum-like transaction fields/types 0, 1, 2, and 4; type 3 blob transactions are not supported.",
+      "source": "https://docs.monad.xyz/developer-essentials/transactions.md"
+    }
+  ],
+  "sanitization": {
+    "raw_transcripts_persisted": false,
+    "secret_sources_read": false
+  },
+  "schema_version": "w0.rpc_provider_evidence.v1",
+  "selected_provider": {
+    "label": "quicknode-public",
+    "public_url": "https://testnet-rpc.monad.xyz",
+    "selection_reason": "Official public Monad Testnet endpoint; eth_chainId and short read-only checks succeeded."
+  },
+  "status": "pass_with_followup"
+}

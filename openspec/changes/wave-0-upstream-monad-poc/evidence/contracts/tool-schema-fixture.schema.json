@@ -1,0 +1,60 @@
+{
+  "$id": "https://compass.local/w0/tool-schema-fixture",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "blocker_ids": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "capture_id": {
+      "type": "string"
+    },
+    "captured_at": {
+      "type": "string"
+    },
+    "descriptor": {
+      "type": "object"
+    },
+    "evidence_refs": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "readiness": {
+      "type": "object"
+    },
+    "sanitization": {
+      "type": "object"
+    },
+    "schema_version": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "tool_name": {
+      "type": "string"
+    },
+    "tool_present": {
+      "type": "boolean"
+    },
+    "upstream": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "upstream",
+    "tool_name",
+    "tool_present",
+    "status",
+    "sanitization",
+    "readiness"
+  ],
+  "title": "W0 Tool Schema Fixture",
+  "type": "object"
+}

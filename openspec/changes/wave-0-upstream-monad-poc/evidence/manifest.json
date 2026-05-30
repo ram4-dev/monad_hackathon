@@ -1,0 +1,111 @@
+{
+  "application_source_changed": false,
+  "blocker_ids": [
+    "W0-BLOCKER-006",
+    "W0-BLOCKER-007",
+    "W0-BLOCKER-008",
+    "W0-BLOCKER-009"
+  ],
+  "capture_id": "w0-20260530T153616Z",
+  "captured_at": "2026-05-30T16:20:16Z",
+  "change": "wave-0-upstream-monad-poc",
+  "evidence_refs": {
+    "blockers": "evidence/blockers/blocker-register.jsonl",
+    "chain_validation": "evidence/chain/monad-testnet-validation.json",
+    "commands": "evidence/commands/safe-command-log.md",
+    "consent": "evidence/consent/*.jsonl",
+    "contracts": "evidence/contracts/*.schema.json",
+    "host_no_bypass": "evidence/host/host-visible-tools.sanitized.json",
+    "reads": "evidence/reads/*.json",
+    "registry_readiness": "evidence/upstream/registry-readiness.md",
+    "rpc_provider": "evidence/rpc/provider-behavior.json",
+    "schema_hash_manifest": "evidence/upstream/schema-hash-manifest.json",
+    "simulation": "evidence/simulation/*.json",
+    "verify_report": "evidence/verify-report.md",
+    "wallet_agent_tools_list": "evidence/upstream/wallet-agent-tools-list.sanitized.json"
+  },
+  "mode": "standard_evidence",
+  "official_docs": [
+    {
+      "status": "fetched_or_consulted",
+      "url": "https://github.com/wallet-agent/wallet-agent"
+    },
+    {
+      "status": "fetched_or_consulted",
+      "url": "https://docs.monad.xyz/llms.txt"
+    },
+    {
+      "status": "fetched_or_consulted",
+      "url": "https://docs.monad.xyz/developer-essentials/testnets.md"
+    },
+    {
+      "status": "fetched_or_consulted",
+      "url": "https://docs.monad.xyz/reference/json-rpc/overview.md"
+    },
+    {
+      "status": "fetched_or_consulted",
+      "url": "https://docs.monad.xyz/developer-essentials/gas-pricing.md"
+    },
+    {
+      "status": "fetched_or_consulted",
+      "url": "https://docs.monad.xyz/developer-essentials/transactions.md"
+    },
+    {
+      "status": "fetched_or_consulted",
+      "url": "https://docs.monad.xyz/guides/monad-mcp.md"
+    }
+  ],
+  "rpc": {
+    "blocker_ids": [
+      "W0-BLOCKER-008"
+    ],
+    "chain_id_evidence": "0x279f == 10143",
+    "fallbacks": [
+      {
+        "label": "ankr-public",
+        "public_url": "https://rpc.ankr.com/monad_testnet",
+        "status": "chain_id_ok"
+      },
+      {
+        "label": "monadinfra-public",
+        "public_url": "https://rpc-testnet.monadinfra.com",
+        "status": "chain_id_ok"
+      }
+    ],
+    "selected_provider": {
+      "label": "quicknode-public",
+      "public_url": "https://testnet-rpc.monad.xyz",
+      "status": "selected"
+    }
+  },
+  "sanitization": {
+    "raw_transcripts_persisted": false,
+    "redaction_policy": "Persist only public URLs/provider labels, method names, safe public chain data, blocker IDs, and sanitized placeholders.",
+    "secret_sources_read": false
+  },
+  "schema_version": "w0.evidence_manifest.v1",
+  "strict_tdd": false,
+  "test_runner": null,
+  "wallet_agent": {
+    "availability_status": "available",
+    "blocker_ids": [],
+    "chain_read_sim_status": "captured",
+    "command_shape": "bunx wallet-agent@latest",
+    "last_chain_read_sim_capture_id": "w0-wallet-agent-monad-poc-20260530T162016Z",
+    "mcp_methods_attempted": [
+      "initialize",
+      "notifications/initialized",
+      "tools/list"
+    ],
+    "notes": "Discovery succeeded after overriding the local private npm registry with the public npm registry. No tools/call, private-key, keystore, signing, broadcast, write, transfer, or approval methods were used.",
+    "protocol": "newline-delimited JSON-RPC over stdio",
+    "registry_override": "npm_config_registry=https://registry.npmjs.org/",
+    "server_info": {
+      "name": "wallet-agent",
+      "version": "0.1.0"
+    },
+    "source": "https://github.com/wallet-agent/wallet-agent",
+    "tools_list_status": "captured",
+    "total_tools": 42
+  }
+}

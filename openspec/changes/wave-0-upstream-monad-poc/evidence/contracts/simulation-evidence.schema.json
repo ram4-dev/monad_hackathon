@@ -1,0 +1,60 @@
+{
+  "$id": "https://compass.local/w0/simulation-evidence",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "blocker_ids": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "candidate_context": {
+      "type": "object"
+    },
+    "capture_id": {
+      "type": "string"
+    },
+    "captured_at": {
+      "type": "string"
+    },
+    "classification": {
+      "type": "string"
+    },
+    "evidence_refs": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "outcome": {
+      "type": "object"
+    },
+    "payload_inspectability": {
+      "type": "object"
+    },
+    "sanitization": {
+      "type": "object"
+    },
+    "schema_version": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "tool_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "capture_id",
+    "captured_at",
+    "status",
+    "tool_name",
+    "classification",
+    "sanitization"
+  ],
+  "title": "W0 Simulation Evidence",
+  "type": "object"
+}

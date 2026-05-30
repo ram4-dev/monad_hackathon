@@ -1,0 +1,26 @@
+{
+  "descriptor": null,
+  "evidence_refs": [
+    "evidence/upstream/wallet-agent-tools-list.sanitized.json"
+  ],
+  "readiness": {
+    "blocker_ids": [
+      "W0-BLOCKER-009"
+    ],
+    "missing_fields": [
+      "live MCP descriptor absent from tools/list"
+    ],
+    "registry_ready": false
+  },
+  "sanitization": {
+    "raw_transcripts_persisted": false,
+    "redactions_applied": [],
+    "secret_sources_read": false
+  },
+  "schema_version": "w0.tool_schema_fixture.v1",
+  "status": "absent",
+  "tool_name": "dry_run_transaction",
+  "tool_present": false,
+  "upstream": "wallet_agent",
+  "upstream_source": "https://github.com/wallet-agent/wallet-agent"
+}

@@ -1,0 +1,56 @@
+{
+  "$id": "https://compass.local/w0/rpc-provider-evidence",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "blocker_ids": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "capture_id": {
+      "type": "string"
+    },
+    "captured_at": {
+      "type": "string"
+    },
+    "evidence_refs": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "fallback_providers": {
+      "type": "array"
+    },
+    "observations": {
+      "type": "array"
+    },
+    "official_caveats": {
+      "type": "array"
+    },
+    "sanitization": {
+      "type": "object"
+    },
+    "schema_version": {
+      "type": "string"
+    },
+    "selected_provider": {
+      "type": "object"
+    },
+    "status": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "capture_id",
+    "captured_at",
+    "status",
+    "selected_provider",
+    "sanitization"
+  ],
+  "title": "W0 RPC Provider Evidence",
+  "type": "object"
+}

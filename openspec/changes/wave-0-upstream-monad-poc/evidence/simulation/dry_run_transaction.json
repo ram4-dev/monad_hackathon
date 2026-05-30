@@ -1,0 +1,27 @@
+{
+  "blocker_ids": [
+    "W0-BLOCKER-009"
+  ],
+  "capture_id": "w0-wallet-agent-monad-poc-20260530T162016Z",
+  "captured_at": "2026-05-30T16:20:16Z",
+  "chain_id": 10143,
+  "classification": "simulation",
+  "evidence_refs": [
+    "evidence/upstream/tools/dry_run_transaction.schema.json"
+  ],
+  "outcome": {
+    "run": false,
+    "safe_cause": "dry_run_transaction is absent from live Wallet Agent tools/list."
+  },
+  "payload_inspectability": {
+    "reason": "Tool absent; simulate_transaction is available.",
+    "wallet_agent_payload_inspectable": false
+  },
+  "sanitization": {
+    "raw_transcripts_persisted": false,
+    "secret_sources_read": false
+  },
+  "schema_version": "w0.simulation_evidence.v1",
+  "status": "absent",
+  "tool_name": "dry_run_transaction"
+}

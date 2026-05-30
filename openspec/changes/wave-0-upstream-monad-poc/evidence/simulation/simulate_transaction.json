@@ -1,0 +1,37 @@
+{
+  "blocker_ids": [],
+  "candidate_context": {
+    "args": [
+      "<safe-mock-account>"
+    ],
+    "contract": "zero address placeholder",
+    "function": "balanceOf",
+    "mutating": false,
+    "safe_account": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+  },
+  "capture_id": "w0-wallet-agent-monad-poc-20260530T162016Z",
+  "captured_at": "2026-05-30T16:20:16Z",
+  "chain_id": 10143,
+  "classification": "simulation_read_like",
+  "evidence_refs": [
+    "evidence/commands/safe-command-log.md"
+  ],
+  "outcome": {
+    "ok": true,
+    "texts": [
+      "Transaction Simulation Failed:\n- Contract: 0x0000000000000000000000000000000000000000\n- Function: balanceOf\n- Error: The contract function \"balanceOf\" returned no data (\"0x\").\n\nThis could be due to any of the following:\n  - The contract does not have the function \"balanceOf\",\n  - The parameters passed to the contract function may be invalid, or\n  - The address is not a contract.\n \nContract Call:\n  address:   0x0000000000000000000000000000000000000000\n  function:  balanceOf(address account)\n  args:               (0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266)\n  sender:    0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266\n\nDocs: https://viem.sh/docs/contract/simulateContract\nVersion: viem@2.51.3\n- Will Revert: Unknown\nThe transaction will likely fail if executed."
+    ],
+    "wallet_agent_run": true
+  },
+  "payload_inspectability": {
+    "reason": "Simulation response includes contract, function, args, sender, and failure/revert judgment without signing or broadcasting.",
+    "wallet_agent_payload_inspectable": true
+  },
+  "sanitization": {
+    "raw_transcripts_persisted": false,
+    "secret_sources_read": false
+  },
+  "schema_version": "w0.simulation_evidence.v1",
+  "status": "pass",
+  "tool_name": "simulate_transaction"
+}

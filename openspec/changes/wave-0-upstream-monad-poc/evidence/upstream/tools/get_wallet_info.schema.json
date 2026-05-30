@@ -1,0 +1,29 @@
+{
+  "descriptor": {
+    "description": "Get current wallet configuration info",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "name": "get_wallet_info"
+  },
+  "evidence_refs": [
+    "evidence/upstream/wallet-agent-tools-list.sanitized.json"
+  ],
+  "readiness": {
+    "blocker_ids": [],
+    "missing_fields": [],
+    "registry_ready": true
+  },
+  "sanitization": {
+    "raw_transcripts_persisted": false,
+    "redactions_applied": [],
+    "secret_sources_read": false
+  },
+  "schema_version": "w0.tool_schema_fixture.v1",
+  "status": "captured",
+  "tool_name": "get_wallet_info",
+  "tool_present": true,
+  "upstream": "wallet_agent",
+  "upstream_source": "https://github.com/wallet-agent/wallet-agent"
+}

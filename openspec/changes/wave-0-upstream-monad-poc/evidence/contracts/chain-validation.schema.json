@@ -1,0 +1,57 @@
+{
+  "$id": "https://compass.local/w0/chain-validation",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "blocker_ids": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "capture_id": {
+      "type": "string"
+    },
+    "captured_at": {
+      "type": "string"
+    },
+    "evidence_refs": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "expected_chain_id": {
+      "type": "integer"
+    },
+    "expected_symbol": {
+      "type": "string"
+    },
+    "rpc_confirmation": {
+      "type": "object"
+    },
+    "sanitization": {
+      "type": "object"
+    },
+    "schema_version": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "wallet_agent_chain_flow": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "capture_id",
+    "captured_at",
+    "status",
+    "expected_chain_id",
+    "expected_symbol",
+    "sanitization"
+  ],
+  "title": "W0 Monad Chain Validation",
+  "type": "object"
+}

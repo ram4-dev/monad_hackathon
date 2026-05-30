@@ -1,0 +1,52 @@
+{
+  "descriptor": {
+    "description": "Sign EIP-712 typed data",
+    "inputSchema": {
+      "properties": {
+        "domain": {
+          "description": "EIP-712 domain",
+          "type": "object"
+        },
+        "message": {
+          "description": "Message to sign",
+          "type": "object"
+        },
+        "primaryType": {
+          "description": "Primary type name",
+          "type": "string"
+        },
+        "types": {
+          "description": "EIP-712 types",
+          "type": "object"
+        }
+      },
+      "required": [
+        "domain",
+        "types",
+        "primaryType",
+        "message"
+      ],
+      "type": "object"
+    },
+    "name": "sign_typed_data"
+  },
+  "evidence_refs": [
+    "evidence/upstream/wallet-agent-tools-list.sanitized.json"
+  ],
+  "readiness": {
+    "blocker_ids": [],
+    "missing_fields": [],
+    "registry_ready": true
+  },
+  "sanitization": {
+    "raw_transcripts_persisted": false,
+    "redactions_applied": [],
+    "secret_sources_read": false
+  },
+  "schema_version": "w0.tool_schema_fixture.v1",
+  "status": "captured",
+  "tool_name": "sign_typed_data",
+  "tool_present": true,
+  "upstream": "wallet_agent",
+  "upstream_source": "https://github.com/wallet-agent/wallet-agent"
+}

@@ -1,0 +1,54 @@
+{
+  "$id": "https://compass.local/w0/schema-hash-manifest",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "blocker_ids": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "canonicalization": {
+      "type": "string"
+    },
+    "capture_id": {
+      "type": "string"
+    },
+    "captured_at": {
+      "type": "string"
+    },
+    "entries": {
+      "type": "array"
+    },
+    "evidence_refs": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "hash_algorithm": {
+      "type": "string"
+    },
+    "sanitization": {
+      "type": "object"
+    },
+    "schema_version": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "capture_id",
+    "captured_at",
+    "canonicalization",
+    "hash_algorithm",
+    "entries",
+    "status"
+  ],
+  "title": "W0 Schema Hash Manifest",
+  "type": "object"
+}

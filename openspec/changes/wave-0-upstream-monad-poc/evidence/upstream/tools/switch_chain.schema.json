@@ -1,0 +1,37 @@
+{
+  "descriptor": {
+    "description": "Switch to a different chain",
+    "inputSchema": {
+      "properties": {
+        "chainId": {
+          "description": "Chain ID to switch to (1 for mainnet, 11155111 for sepolia, 137 for polygon, 31337 for anvil)",
+          "type": "number"
+        }
+      },
+      "required": [
+        "chainId"
+      ],
+      "type": "object"
+    },
+    "name": "switch_chain"
+  },
+  "evidence_refs": [
+    "evidence/upstream/wallet-agent-tools-list.sanitized.json"
+  ],
+  "readiness": {
+    "blocker_ids": [],
+    "missing_fields": [],
+    "registry_ready": true
+  },
+  "sanitization": {
+    "raw_transcripts_persisted": false,
+    "redactions_applied": [],
+    "secret_sources_read": false
+  },
+  "schema_version": "w0.tool_schema_fixture.v1",
+  "status": "captured",
+  "tool_name": "switch_chain",
+  "tool_present": true,
+  "upstream": "wallet_agent",
+  "upstream_source": "https://github.com/wallet-agent/wallet-agent"
+}

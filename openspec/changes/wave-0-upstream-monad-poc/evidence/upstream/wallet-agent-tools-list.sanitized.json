@@ -1,0 +1,876 @@
+{
+  "capture_id": "w0-wallet-agent-debug-20260530T160836Z",
+  "captured_at": "2026-05-30T16:08:36Z",
+  "command_shape": "bunx wallet-agent@latest",
+  "mcp_methods_used": [
+    "initialize",
+    "notifications/initialized",
+    "tools/list"
+  ],
+  "protocol": "newline-delimited JSON-RPC over stdio",
+  "registry_override": "npm_config_registry=https://registry.npmjs.org/",
+  "sanitization": {
+    "raw_transcripts_persisted": false,
+    "redactions_applied": [],
+    "secret_sources_read": false
+  },
+  "schema_version": "w0.wallet_agent_tools_list.v1",
+  "server_info": {
+    "name": "wallet-agent",
+    "version": "0.1.0"
+  },
+  "status": "captured",
+  "tools": [
+    {
+      "description": "Connect to a wallet using the specified address",
+      "inputSchema": {
+        "properties": {
+          "address": {
+            "description": "The wallet address to connect (must be one of the mock accounts)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "address"
+        ],
+        "type": "object"
+      },
+      "name": "connect_wallet"
+    },
+    {
+      "description": "Disconnect the currently connected wallet",
+      "inputSchema": {
+        "properties": {},
+        "type": "object"
+      },
+      "name": "disconnect_wallet"
+    },
+    {
+      "description": "Get the list of available mock accounts",
+      "inputSchema": {
+        "properties": {},
+        "type": "object"
+      },
+      "name": "get_accounts"
+    },
+    {
+      "description": "Get the currently connected account information",
+      "inputSchema": {
+        "properties": {},
+        "type": "object"
+      },
+      "name": "get_current_account"
+    },
+    {
+      "description": "Sign a message with the connected wallet",
+      "inputSchema": {
+        "properties": {
+          "message": {
+            "description": "The message to sign",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "name": "sign_message"
+    },
+    {
+      "description": "Sign EIP-712 typed data",
+      "inputSchema": {
+        "properties": {
+          "domain": {
+            "description": "EIP-712 domain",
+            "type": "object"
+          },
+          "message": {
+            "description": "Message to sign",
+            "type": "object"
+          },
+          "primaryType": {
+            "description": "Primary type name",
+            "type": "string"
+          },
+          "types": {
+            "description": "EIP-712 types",
+            "type": "object"
+          }
+        },
+        "required": [
+          "domain",
+          "types",
+          "primaryType",
+          "message"
+        ],
+        "type": "object"
+      },
+      "name": "sign_typed_data"
+    },
+    {
+      "description": "Send a transaction",
+      "inputSchema": {
+        "properties": {
+          "data": {
+            "description": "Transaction data (optional)",
+            "type": "string"
+          },
+          "to": {
+            "description": "Recipient address",
+            "type": "string"
+          },
+          "value": {
+            "description": "Value to send in ETH",
+            "type": "string"
+          }
+        },
+        "required": [
+          "to",
+          "value"
+        ],
+        "type": "object"
+      },
+      "name": "send_transaction"
+    },
+    {
+      "description": "Switch to a different chain",
+      "inputSchema": {
+        "properties": {
+          "chainId": {
+            "description": "Chain ID to switch to (1 for mainnet, 11155111 for sepolia, 137 for polygon, 31337 for anvil)",
+            "type": "number"
+          }
+        },
+        "required": [
+          "chainId"
+        ],
+        "type": "object"
+      },
+      "name": "switch_chain"
+    },
+    {
+      "description": "Get the balance of an address",
+      "inputSchema": {
+        "properties": {
+          "address": {
+            "description": "Address to check balance for (defaults to connected account)",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "get_balance"
+    },
+    {
+      "description": "Add a custom EVM-compatible blockchain network",
+      "inputSchema": {
+        "properties": {
+          "blockExplorerUrl": {
+            "description": "Block explorer URL (optional)",
+            "type": "string"
+          },
+          "chainId": {
+            "description": "Unique chain ID for the network",
+            "type": "number"
+          },
+          "name": {
+            "description": "Name of the blockchain network",
+            "type": "string"
+          },
+          "nativeCurrency": {
+            "description": "Native currency configuration",
+            "properties": {
+              "decimals": {
+                "description": "Number of decimals (usually 18)",
+                "type": "number"
+              },
+              "name": {
+                "description": "Currency name (e.g., 'Ether')",
+                "type": "string"
+              },
+              "symbol": {
+                "description": "Currency symbol (e.g., 'ETH')",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "symbol",
+              "decimals"
+            ],
+            "type": "object"
+          },
+          "rpcUrl": {
+            "description": "RPC endpoint URL (e.g., https://rpc.example.com)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "chainId",
+          "name",
+          "rpcUrl",
+          "nativeCurrency"
+        ],
+        "type": "object"
+      },
+      "name": "add_custom_chain"
+    },
+    {
+      "description": "Update an existing custom chain's configuration",
+      "inputSchema": {
+        "properties": {
+          "blockExplorerUrl": {
+            "description": "New block explorer URL (optional)",
+            "type": "string"
+          },
+          "chainId": {
+            "description": "Chain ID of the custom chain to update",
+            "type": "number"
+          },
+          "name": {
+            "description": "New name for the blockchain network (optional)",
+            "type": "string"
+          },
+          "nativeCurrency": {
+            "description": "New native currency configuration (optional)",
+            "properties": {
+              "decimals": {
+                "description": "Number of decimals (usually 18)",
+                "type": "number"
+              },
+              "name": {
+                "description": "Currency name (e.g., 'Ether')",
+                "type": "string"
+              },
+              "symbol": {
+                "description": "Currency symbol (e.g., 'ETH')",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "symbol",
+              "decimals"
+            ],
+            "type": "object"
+          },
+          "rpcUrl": {
+            "description": "New RPC endpoint URL (optional)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "chainId"
+        ],
+        "type": "object"
+      },
+      "name": "update_custom_chain"
+    },
+    {
+      "description": "Import a private key to use as a real wallet (supports environment variables and file paths for security)",
+      "inputSchema": {
+        "properties": {
+          "privateKey": {
+            "description": "Private key starting with 0x, OR environment variable name (e.g., 'WALLET_PRIVATE_KEY'), OR file path (e.g., '~/.wallet-private-key')",
+            "type": "string"
+          }
+        },
+        "required": [
+          "privateKey"
+        ],
+        "type": "object"
+      },
+      "name": "import_private_key"
+    },
+    {
+      "description": "List all imported private key wallets",
+      "inputSchema": {
+        "properties": {},
+        "type": "object"
+      },
+      "name": "list_imported_wallets"
+    },
+    {
+      "description": "Remove an imported private key",
+      "inputSchema": {
+        "properties": {
+          "address": {
+            "description": "Address of the wallet to remove",
+            "type": "string"
+          }
+        },
+        "required": [
+          "address"
+        ],
+        "type": "object"
+      },
+      "name": "remove_private_key"
+    },
+    {
+      "description": "Switch between mock and private key wallets",
+      "inputSchema": {
+        "properties": {
+          "type": {
+            "description": "Wallet type to use",
+            "enum": [
+              "mock",
+              "privateKey"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      "name": "set_wallet_type"
+    },
+    {
+      "description": "Get current wallet configuration info",
+      "inputSchema": {
+        "properties": {},
+        "type": "object"
+      },
+      "name": "get_wallet_info"
+    },
+    {
+      "description": "Load contract ABIs from a Wagmi-generated file",
+      "inputSchema": {
+        "properties": {
+          "filePath": {
+            "description": "Path to the Wagmi generated file (e.g., './src/generated.ts')",
+            "type": "string"
+          }
+        },
+        "required": [
+          "filePath"
+        ],
+        "type": "object"
+      },
+      "name": "load_wagmi_config"
+    },
+    {
+      "description": "List all available contracts from Wagmi config",
+      "inputSchema": {
+        "properties": {},
+        "type": "object"
+      },
+      "name": "list_contracts"
+    },
+    {
+      "description": "Write to a smart contract using Wagmi-generated ABIs",
+      "inputSchema": {
+        "properties": {
+          "address": {
+            "description": "Contract address (optional if address is in Wagmi config for current chain)",
+            "type": "string"
+          },
+          "args": {
+            "description": "Function arguments",
+            "items": {},
+            "type": "array"
+          },
+          "contract": {
+            "description": "Contract name from Wagmi config",
+            "type": "string"
+          },
+          "function": {
+            "description": "Function name to call",
+            "type": "string"
+          },
+          "value": {
+            "description": "ETH value to send with transaction (optional)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "contract",
+          "function"
+        ],
+        "type": "object"
+      },
+      "name": "write_contract"
+    },
+    {
+      "description": "Read from a smart contract using Wagmi-generated ABIs",
+      "inputSchema": {
+        "properties": {
+          "address": {
+            "description": "Contract address (optional if address is in Wagmi config for current chain)",
+            "type": "string"
+          },
+          "args": {
+            "description": "Function arguments",
+            "items": {},
+            "type": "array"
+          },
+          "contract": {
+            "description": "Contract name from Wagmi config",
+            "type": "string"
+          },
+          "function": {
+            "description": "Function name to call",
+            "type": "string"
+          }
+        },
+        "required": [
+          "contract",
+          "function"
+        ],
+        "type": "object"
+      },
+      "name": "read_contract"
+    },
+    {
+      "description": "Transfer ERC-20 tokens to another address",
+      "inputSchema": {
+        "properties": {
+          "amount": {
+            "description": "Amount to transfer (in token units, e.g., '100' for 100 USDC)",
+            "type": "string"
+          },
+          "to": {
+            "description": "Recipient address",
+            "type": "string"
+          },
+          "token": {
+            "description": "Token contract name, symbol (USDC), or address",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "to",
+          "amount"
+        ],
+        "type": "object"
+      },
+      "name": "transfer_token"
+    },
+    {
+      "description": "Approve ERC-20 token spending",
+      "inputSchema": {
+        "properties": {
+          "amount": {
+            "description": "Amount to approve (in token units, or 'max' for unlimited)",
+            "type": "string"
+          },
+          "spender": {
+            "description": "Address to approve for spending",
+            "type": "string"
+          },
+          "token": {
+            "description": "Token contract name, symbol (USDC), or address",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "spender",
+          "amount"
+        ],
+        "type": "object"
+      },
+      "name": "approve_token"
+    },
+    {
+      "description": "Get ERC-20 token balance",
+      "inputSchema": {
+        "properties": {
+          "address": {
+            "description": "Address to check balance for (defaults to connected wallet)",
+            "type": "string"
+          },
+          "token": {
+            "description": "Token contract name, symbol (USDC), or address",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "type": "object"
+      },
+      "name": "get_token_balance"
+    },
+    {
+      "description": "Get ERC-20 token information (name, symbol, decimals)",
+      "inputSchema": {
+        "properties": {
+          "token": {
+            "description": "Token contract name, symbol (USDC), or address",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "type": "object"
+      },
+      "name": "get_token_info"
+    },
+    {
+      "description": "Transfer an ERC-721 NFT to another address",
+      "inputSchema": {
+        "properties": {
+          "nft": {
+            "description": "NFT contract name or address",
+            "type": "string"
+          },
+          "to": {
+            "description": "Recipient address",
+            "type": "string"
+          },
+          "tokenId": {
+            "description": "Token ID to transfer",
+            "type": "string"
+          }
+        },
+        "required": [
+          "nft",
+          "to",
+          "tokenId"
+        ],
+        "type": "object"
+      },
+      "name": "transfer_nft"
+    },
+    {
+      "description": "Get the owner of an ERC-721 NFT",
+      "inputSchema": {
+        "properties": {
+          "nft": {
+            "description": "NFT contract name or address",
+            "type": "string"
+          },
+          "tokenId": {
+            "description": "Token ID to check",
+            "type": "string"
+          }
+        },
+        "required": [
+          "nft",
+          "tokenId"
+        ],
+        "type": "object"
+      },
+      "name": "get_nft_owner"
+    },
+    {
+      "description": "Get ERC-721 NFT information (name, symbol, tokenURI)",
+      "inputSchema": {
+        "properties": {
+          "nft": {
+            "description": "NFT contract name or address",
+            "type": "string"
+          },
+          "tokenId": {
+            "description": "Token ID (optional for name/symbol)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "nft"
+        ],
+        "type": "object"
+      },
+      "name": "get_nft_info"
+    },
+    {
+      "description": "Estimate gas for a transaction before sending",
+      "inputSchema": {
+        "properties": {
+          "data": {
+            "description": "Transaction data (optional)",
+            "type": "string"
+          },
+          "from": {
+            "description": "From address (defaults to connected wallet)",
+            "type": "string"
+          },
+          "to": {
+            "description": "Recipient address",
+            "type": "string"
+          },
+          "value": {
+            "description": "Value to send in ETH (optional)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "to"
+        ],
+        "type": "object"
+      },
+      "name": "estimate_gas"
+    },
+    {
+      "description": "Get the status of a transaction by its hash",
+      "inputSchema": {
+        "properties": {
+          "hash": {
+            "description": "Transaction hash (0x...)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "hash"
+        ],
+        "type": "object"
+      },
+      "name": "get_transaction_status"
+    },
+    {
+      "description": "Get detailed receipt of a mined transaction",
+      "inputSchema": {
+        "properties": {
+          "hash": {
+            "description": "Transaction hash (0x...)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "hash"
+        ],
+        "type": "object"
+      },
+      "name": "get_transaction_receipt"
+    },
+    {
+      "description": "Resolve an ENS name to an Ethereum address (mainnet only)",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "description": "ENS name to resolve (e.g., vitalik.eth)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "name": "resolve_ens_name"
+    },
+    {
+      "description": "Simulate a contract transaction before executing to check if it will succeed",
+      "inputSchema": {
+        "properties": {
+          "address": {
+            "description": "Address to simulate from (defaults to connected wallet)",
+            "type": "string"
+          },
+          "args": {
+            "description": "Function arguments",
+            "items": {},
+            "type": "array"
+          },
+          "contract": {
+            "description": "Contract name from Wagmi config or address",
+            "type": "string"
+          },
+          "function": {
+            "description": "Function name to simulate",
+            "type": "string"
+          },
+          "value": {
+            "description": "ETH value to send with transaction (optional)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "contract",
+          "function"
+        ],
+        "type": "object"
+      },
+      "name": "simulate_transaction"
+    },
+    {
+      "description": "Remove a previously added custom chain",
+      "inputSchema": {
+        "properties": {
+          "chainId": {
+            "description": "Chain ID of the custom chain to remove",
+            "type": "number"
+          }
+        },
+        "required": [
+          "chainId"
+        ],
+        "type": "object"
+      },
+      "name": "remove_custom_chain"
+    },
+    {
+      "description": "Import a Hyperliquid wallet using private key",
+      "inputSchema": {
+        "properties": {
+          "privateKey": {
+            "description": "Private key starting with 0x (will be stored securely in memory)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "privateKey"
+        ],
+        "type": "object"
+      },
+      "name": "hl_import_wallet"
+    },
+    {
+      "description": "Get Hyperliquid account information including balance and positions",
+      "inputSchema": {
+        "properties": {
+          "address": {
+            "description": "Wallet address (optional, uses imported wallet if not provided)",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "hl_get_account_info"
+    },
+    {
+      "description": "Place a basic limit or market order on Hyperliquid",
+      "inputSchema": {
+        "properties": {
+          "cloid": {
+            "description": "Client order ID for tracking (optional)",
+            "type": "string"
+          },
+          "coin": {
+            "description": "Trading pair symbol (e.g., 'BTC', 'ETH')",
+            "type": "string"
+          },
+          "isBuy": {
+            "description": "True for buy order, false for sell order",
+            "type": "boolean"
+          },
+          "limitPx": {
+            "description": "Limit price (optional, if not provided creates market order)",
+            "type": "number"
+          },
+          "orderType": {
+            "default": "limit",
+            "description": "Order type",
+            "enum": [
+              "limit",
+              "market"
+            ],
+            "type": "string"
+          },
+          "reduceOnly": {
+            "default": false,
+            "description": "If true, order can only reduce position",
+            "type": "boolean"
+          },
+          "sz": {
+            "description": "Order size",
+            "type": "number"
+          }
+        },
+        "required": [
+          "coin",
+          "isBuy",
+          "sz"
+        ],
+        "type": "object"
+      },
+      "name": "hl_place_order"
+    },
+    {
+      "description": "Cancel an open order on Hyperliquid",
+      "inputSchema": {
+        "properties": {
+          "coin": {
+            "description": "Trading pair symbol",
+            "type": "string"
+          },
+          "orderId": {
+            "description": "Order ID to cancel (optional, cancels all orders for coin if not provided)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "coin"
+        ],
+        "type": "object"
+      },
+      "name": "hl_cancel_order"
+    },
+    {
+      "description": "Get all open orders",
+      "inputSchema": {
+        "properties": {
+          "address": {
+            "description": "Wallet address (optional, uses imported wallet if not provided)",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "hl_get_open_orders"
+    },
+    {
+      "description": "Get current positions",
+      "inputSchema": {
+        "properties": {
+          "address": {
+            "description": "Wallet address (optional, uses imported wallet if not provided)",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "hl_get_positions"
+    },
+    {
+      "description": "Transfer USDC on Hyperliquid",
+      "inputSchema": {
+        "properties": {
+          "amount": {
+            "description": "Amount of USDC to transfer",
+            "type": "number"
+          },
+          "destination": {
+            "description": "Destination address",
+            "type": "string"
+          }
+        },
+        "required": [
+          "destination",
+          "amount"
+        ],
+        "type": "object"
+      },
+      "name": "hl_transfer"
+    },
+    {
+      "description": "Get mid prices for all trading pairs",
+      "inputSchema": {
+        "properties": {},
+        "type": "object"
+      },
+      "name": "hl_get_all_mids"
+    },
+    {
+      "description": "Get trade fill history for a user",
+      "inputSchema": {
+        "properties": {
+          "address": {
+            "description": "Wallet address (optional, uses imported wallet if not provided)",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "hl_get_user_fills"
+    }
+  ],
+  "total_tools": 42,
+  "upstream": "wallet_agent",
+  "upstream_source": "https://github.com/wallet-agent/wallet-agent"
+}

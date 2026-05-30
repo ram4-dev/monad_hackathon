@@ -1,0 +1,56 @@
+{
+  "$id": "https://compass.local/w0/consent-record",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "action_type": {
+      "type": "string"
+    },
+    "blocker_ids": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "capture_id": {
+      "type": "string"
+    },
+    "captured_at": {
+      "type": "string"
+    },
+    "chain_id": {
+      "type": "integer"
+    },
+    "consent_status": {
+      "type": "string"
+    },
+    "evidence_refs": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "network": {
+      "type": "string"
+    },
+    "sanitization": {
+      "type": "object"
+    },
+    "schema_version": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "capture_id",
+    "captured_at",
+    "action_type",
+    "consent_status",
+    "status"
+  ],
+  "title": "W0 Consent Record",
+  "type": "object"
+}

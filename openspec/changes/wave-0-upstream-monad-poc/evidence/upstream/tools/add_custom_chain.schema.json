@@ -1,0 +1,75 @@
+{
+  "descriptor": {
+    "description": "Add a custom EVM-compatible blockchain network",
+    "inputSchema": {
+      "properties": {
+        "blockExplorerUrl": {
+          "description": "Block explorer URL (optional)",
+          "type": "string"
+        },
+        "chainId": {
+          "description": "Unique chain ID for the network",
+          "type": "number"
+        },
+        "name": {
+          "description": "Name of the blockchain network",
+          "type": "string"
+        },
+        "nativeCurrency": {
+          "description": "Native currency configuration",
+          "properties": {
+            "decimals": {
+              "description": "Number of decimals (usually 18)",
+              "type": "number"
+            },
+            "name": {
+              "description": "Currency name (e.g., 'Ether')",
+              "type": "string"
+            },
+            "symbol": {
+              "description": "Currency symbol (e.g., 'ETH')",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "symbol",
+            "decimals"
+          ],
+          "type": "object"
+        },
+        "rpcUrl": {
+          "description": "RPC endpoint URL (e.g., https://rpc.example.com)",
+          "type": "string"
+        }
+      },
+      "required": [
+        "chainId",
+        "name",
+        "rpcUrl",
+        "nativeCurrency"
+      ],
+      "type": "object"
+    },
+    "name": "add_custom_chain"
+  },
+  "evidence_refs": [
+    "evidence/upstream/wallet-agent-tools-list.sanitized.json"
+  ],
+  "readiness": {
+    "blocker_ids": [],
+    "missing_fields": [],
+    "registry_ready": true
+  },
+  "sanitization": {
+    "raw_transcripts_persisted": false,
+    "redactions_applied": [],
+    "secret_sources_read": false
+  },
+  "schema_version": "w0.tool_schema_fixture.v1",
+  "status": "captured",
+  "tool_name": "add_custom_chain",
+  "tool_present": true,
+  "upstream": "wallet_agent",
+  "upstream_source": "https://github.com/wallet-agent/wallet-agent"
+}

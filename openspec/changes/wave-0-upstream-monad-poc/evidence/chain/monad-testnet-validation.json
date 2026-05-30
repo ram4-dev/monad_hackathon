@@ -1,0 +1,61 @@
+{
+  "blocker_ids": [],
+  "capture_id": "w0-wallet-agent-monad-poc-20260530T162016Z",
+  "captured_at": "2026-05-30T16:20:16Z",
+  "evidence_refs": [
+    "evidence/commands/safe-command-log.md",
+    "evidence/upstream/wallet-agent-tools-list.sanitized.json"
+  ],
+  "expected_chain_id": 10143,
+  "expected_chain_id_hex": "0x279f",
+  "expected_network": "Monad Testnet",
+  "expected_symbol": "MON",
+  "non_p0_chains_accepted": false,
+  "official_doc": "https://docs.monad.xyz/developer-essentials/testnets.md",
+  "rpc_confirmation": {
+    "method": "eth_chainId",
+    "providers": [
+      {
+        "decoded": 10143,
+        "label": "quicknode-public",
+        "result": "0x279f",
+        "status": "ok"
+      },
+      {
+        "decoded": 10143,
+        "label": "ankr-public",
+        "result": "0x279f",
+        "status": "ok"
+      },
+      {
+        "decoded": 10143,
+        "label": "monadinfra-public",
+        "result": "0x279f",
+        "status": "ok"
+      }
+    ]
+  },
+  "sanitization": {
+    "raw_transcripts_persisted": false,
+    "secret_sources_read": false
+  },
+  "schema_version": "w0.chain_validation.v1",
+  "status": "pass",
+  "user_supplied_chain_data": {
+    "chain_id": 10143,
+    "currency_symbol": "MON",
+    "network_name": "Monad Testnet"
+  },
+  "wallet_agent_chain_flow": {
+    "active_chain_from_wallet_agent": "Monad Testnet (Chain ID: 10143)",
+    "add_custom_chain": {
+      "status": "ok",
+      "summary": "Custom chain added successfully:\nName: Monad Testnet\nChain ID: 10143\nRPC URL: https://testnet-rpc.monad.xyz\nNative Currency: MON"
+    },
+    "registry_override": "npm_config_registry=https://registry.npmjs.org/",
+    "switch_chain": {
+      "status": "ok",
+      "summary": "Switched to Monad Testnet (Chain ID: 10143)"
+    }
+  }
+}

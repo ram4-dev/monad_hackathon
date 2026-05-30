@@ -1,0 +1,29 @@
+{
+  "blocker_ids": [],
+  "capture_id": "w0-wallet-agent-monad-poc-20260530T162016Z",
+  "captured_at": "2026-05-30T16:20:16Z",
+  "chain_id": 10143,
+  "classification": "read_only",
+  "evidence_refs": [
+    "evidence/commands/safe-command-log.md"
+  ],
+  "outcome": {
+    "ok": true,
+    "run": true,
+    "texts": [
+      "Balance: 0.000980740085998415 MON\nRaw: 980740085998415 wei"
+    ]
+  },
+  "readiness": {
+    "reason": "Wallet Agent returned sanitized read-only evidence using a mock account on Monad Testnet session.",
+    "suitable_for_registry_planning": true
+  },
+  "safe_account": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "sanitization": {
+    "raw_transcripts_persisted": false,
+    "secret_sources_read": false
+  },
+  "schema_version": "w0.read_evidence.v1",
+  "status": "pass",
+  "tool_name": "get_balance"
+}

@@ -1,0 +1,38 @@
+{
+  "blocker_ids": [],
+  "candidate_context": {
+    "candidate": "zero-value transfer from mock account to same mock account",
+    "mutating": false,
+    "provider_label": "quicknode-public",
+    "safe_account": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+  },
+  "capture_id": "w0-wallet-agent-monad-poc-20260530T162016Z",
+  "captured_at": "2026-05-30T16:20:16Z",
+  "chain_id": 10143,
+  "classification": "simulation_read_like",
+  "evidence_refs": [
+    "evidence/commands/safe-command-log.md"
+  ],
+  "official_caveats": [
+    "https://docs.monad.xyz/reference/json-rpc/overview.md",
+    "https://docs.monad.xyz/developer-essentials/gas-pricing.md",
+    "https://docs.monad.xyz/developer-essentials/transactions.md"
+  ],
+  "outcome": {
+    "error_summary": "MCP error -32603: Tool execution failed: An internal error was received.\n\nURL: https://testnet-rpc.monad.xyz\nRequest body: {\"method\":\"eth_estimateGas\",\"params\":[{\"from\":\"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266\",\"to\":\"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266\",\"value\":\"0x0\"}]}\n \nEstimate Gas Arguments:\n  from:   0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266\n  to:     0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266\n  value:  0 MON\n\nDetails: reserve balance violation\nVersion: viem@2.51.3",
+    "ok": false,
+    "safe_error_category": "reserve_balance_violation",
+    "wallet_agent_run": true
+  },
+  "payload_inspectability": {
+    "reason": "Wallet Agent/viem error exposed sanitized from/to/value fields and Monad reserve-balance caveat without signing or broadcasting.",
+    "wallet_agent_payload_inspectable": true
+  },
+  "sanitization": {
+    "raw_transcripts_persisted": false,
+    "secret_sources_read": false
+  },
+  "schema_version": "w0.simulation_evidence.v1",
+  "status": "pass_with_provider_caveat",
+  "tool_name": "estimate_gas"
+}
