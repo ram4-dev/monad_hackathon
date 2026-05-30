@@ -1,0 +1,12 @@
+{
+  "_comment": "Monad Testnet config reference (constitution §5.1). W1 does NOT perform chain calls; --chain is a config label only. RPC URL is intentionally blank — set via MONAD_RPC_URL env, never committed.",
+  "name": "Monad Testnet",
+  "chain_id": 10143,
+  "native_currency": {
+    "name": "Monad",
+    "symbol": "MON",
+    "decimals": 18
+  },
+  "rpc_url": "",
+  "explorer_url": "https://testnet.monadscan.com"
+}
