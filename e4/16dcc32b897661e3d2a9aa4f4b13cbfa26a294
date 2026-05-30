@@ -1,0 +1,178 @@
+openspec/changes/wave-0-upstream-monad-poc/evidence/manifest.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-5,8-9,11-89,91-99,110-111
+openspec/changes/wave-0-upstream-monad-poc/evidence/upstream/tools/dry_run_transaction.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-20,22-26
+openspec/changes/wave-0-upstream-monad-poc/verify-report.md
+  s_73b490bb0f0e9e::t_f7dbf522d8b0b9 248
+  s_73b490bb0f0e9e::t_f95203759c0c9a 1-10,12-14,16-32,36,39,41-46,49-65,67-247,249-251,257-264,267-272,274,277
+openspec/changes/wave-0-upstream-monad-poc/evidence/chain/monad-testnet-validation.md
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-2
+openspec/changes/wave-0-upstream-monad-poc/evidence/simulation/simulate_transaction.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,3,11,14,16-19,25-26,29-34,36-37
+openspec/changes/wave-0-upstream-monad-poc/evidence/contracts/consent-record.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-56
+openspec/changes/wave-0-upstream-monad-poc/evidence/upstream/wallet-agent-tools-list.sanitized.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,4,6-9,12-17,874-876
+openspec/changes/wave-0-upstream-monad-poc/evidence/contracts/rpc-provider-evidence.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-56
+openspec/changes/wave-0-upstream-monad-poc/evidence/upstream/tools/approve_token.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,28-31,35-41,43,45-47
+openspec/changes/wave-0-upstream-monad-poc/evidence/rpc/provider-behavior.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-134
+openspec/changes/wave-0-upstream-monad-poc/evidence/blockers/blocker-register.md
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-2,6
+openspec/changes/wave-0-upstream-monad-poc/evidence/host/host-visible-tools.sanitized.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-22
+openspec/changes/wave-0-upstream-monad-poc/evidence/verify-report.md
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-6,8-11,15,18-19,21-24,26-27,31,34-40,42-55,57,60
+openspec/changes/wave-0-upstream-monad-poc/evidence/reads/get_balance.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,5-10,16-17,20-26,28-29
+openspec/changes/wave-0-upstream-monad-poc/specs/wallet-agent-simulation-poc/spec.md
+  s_96bfb8747a8336::t_e7bb2569d1f99f 60
+  s_96bfb8747a8336::t_c638bdf5f27c6d 1-59,61-88
+openspec/changes/wave-0-upstream-monad-poc/evidence/rpc/provider-evidence.md
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-32
+openspec/changes/wave-0-upstream-monad-poc/evidence/upstream/tools/get_token_balance.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,22-25,29-35,37,39-41
+openspec/changes/wave-0-upstream-monad-poc/evidence/contracts/chain-validation.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-57
+openspec/changes/wave-0-upstream-monad-poc/evidence/upstream/tools/simulate_transaction.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,36-39,43-49,51,53-55
+openspec/changes/wave-0-upstream-monad-poc/evidence/upstream/tools/transfer_token.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,28-31,35-41,43,45-47
+openspec/changes/wave-0-upstream-monad-poc/specs/wallet-agent-upstream-discovery/spec.md
+  s_96bfb8747a8336::t_b3a76793dc2f5c 1-4,6-93
+openspec/changes/wave-0-upstream-monad-poc/apply-progress.md
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-51,56-60,64-71
+openspec/changes/wave-0-upstream-monad-poc/evidence/upstream/tools/sign_typed_data.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,33-36,40-46,48,50-52
+openspec/changes/wave-0-upstream-monad-poc/evidence/contracts/blocker-entry.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-69
+openspec/changes/wave-0-upstream-monad-poc/proposal.md
+  s_0bceba88ecf1a1::t_3f63720684a8d7 1-40,42-71,74-135
+openspec/changes/wave-0-upstream-monad-poc/evidence/reads/get_wallet_info.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,5-10,16-17,20-26,28-29
+openspec/changes/wave-0-upstream-monad-poc/evidence/simulation/payload-inspectability.md
+  s_a03944ec63eea1::t_0683da1d09a7e1 2,6,8
+openspec/changes/wave-0-upstream-monad-poc/evidence/upstream/tools/add_custom_chain.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,56-59,63-69,71,73-75
+openspec/changes/wave-0-upstream-monad-poc/evidence/upstream/registry-readiness.md
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-2,4-8,12-16,29-31,35
+openspec/changes/wave-0-upstream-monad-poc/specs/mcp-host-no-bypass-evidence/spec.md
+  s_96bfb8747a8336::t_d831707ae1752d 1-68
+openspec/changes/wave-0-upstream-monad-poc/evidence/consent/mutation-skips.jsonl
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-8
+openspec/changes/wave-0-upstream-monad-poc/evidence/upstream/tools/get_wallet_info.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,10-13,17-23,25,27-29
+openspec/changes/wave-0-upstream-monad-poc/evidence/contracts/simulation-evidence.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-60
+openspec/changes/wave-0-upstream-monad-poc/evidence/upstream/tools/switch_chain.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,18-21,25-31,33,35-37
+openspec/changes/wave-0-upstream-monad-poc/specs/upstream-blocker-register/spec.md
+  s_96bfb8747a8336::t_32d990fcbdc4b3 1-59
+openspec/changes/wave-0-upstream-monad-poc/evidence/contracts/tool-schema-fixture.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-60
+openspec/changes/wave-0-upstream-monad-poc/evidence/simulation/estimate_gas.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,3,5-6,8,11-21,26-27,30-35,37-38
+openspec/changes/wave-0-upstream-monad-poc/specs/external-mutation-consent-gate/spec.md
+  s_96bfb8747a8336::t_8045db50f8ea7f 1-73
+openspec/changes/wave-0-upstream-monad-poc/evidence/chain/monad-testnet-validation.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,5-42,49,60-61
+openspec/changes/wave-0-upstream-monad-poc/specs/wallet-agent-read-poc/spec.md
+  s_96bfb8747a8336::t_cbaaeab4e99efb 1-72
+openspec/changes/wave-0-upstream-monad-poc/verify.md
+  s_73b490bb0f0e9e::t_af6384a9b40f87 248
+  s_73b490bb0f0e9e::t_f95203759c0c9a 1-10,12-14,16-32,36,39,41-46,49-65,67-247,249-251,257-264,267-272,274,277
+openspec/changes/wave-0-upstream-monad-poc/evidence/README.md
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-53
+openspec/changes/wave-0-upstream-monad-poc/evidence/commands/safe-command-log.md
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-19
+openspec/changes/wave-0-upstream-monad-poc/evidence/host/no-bypass.md
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-19
+openspec/changes/wave-0-upstream-monad-poc/evidence/upstream/tools/estimate_gas.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,30-33,37-43,45,47-49
+openspec/changes/wave-0-upstream-monad-poc/specs/monad-rpc-provider-evidence/spec.md
+  s_96bfb8747a8336::t_d66c04307b7943 1-27,29-65
+  s_96bfb8747a8336::t_a4bfab02d3dff3 28
+openspec/changes/wave-0-upstream-monad-poc/design.md
+  s_110ee32f32f5c7::t_29362ef4466251 1-6,8-260,262-333
+openspec/changes/wave-0-upstream-monad-poc/evidence/reads/get_token_balance.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,5-11,13-14,16-22,24-25
+openspec/changes/wave-0-upstream-monad-poc/evidence/upstream/tools/get_balance.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,15-18,22-28,30,32-34
+openspec/changes/wave-0-upstream-monad-poc/specs/monad-testnet-chain-validation/spec.md
+  s_96bfb8747a8336::t_cd9b854d8b94aa 1-72
+openspec/changes/wave-0-upstream-monad-poc/evidence/contracts/host-no-bypass.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-56
+openspec/changes/wave-0-upstream-monad-poc/evidence/contracts/schema-hash-manifest.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-54
+openspec/changes/wave-0-upstream-monad-poc/evidence/upstream/tools/send_transaction.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1,27-30,34-40,42,44-46
+openspec/changes/wave-0-upstream-monad-poc/evidence/blockers/blocker-register.jsonl
+  s_a03944ec63eea1::t_0683da1d09a7e1 6-8
+openspec/changes/wave-0-upstream-monad-poc/tasks.md
+  s_a03944ec63eea1::t_766aa7d1e650c2 25-31,37,63,91,118,146,173,200,227,256,285,313,339,371-374
+  s_c1be55da288294::t_96e26e333088e7 1-7,9-24,32-34,38-62,64-90,92-96,100-117,119-145,147-172,174-199,201-226,228-255,257-284,286-312,314-338,340-370
+openspec/changes/wave-0-upstream-monad-poc/evidence/upstream/schema-hash-manifest.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-2,5-6,8,11,13-14,16,19,21-22,24,27,29-30,32,35,37-38,40,43,45-46,48,51,53-54,56,59,61-67,69-72,74,77,79-80,82,85,87-88,90,93,95-96,98,101,103-105,107-111,113
+openspec/changes/wave-0-upstream-monad-poc/evidence/contracts/read-evidence.schema.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-55
+openspec/changes/wave-0-upstream-monad-poc/evidence/simulation/dry_run_transaction.json
+  s_a03944ec63eea1::t_0683da1d09a7e1 1-4,7-13,15-16,18-24,26-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "e416dcc32b897661e3d2a9aa4f4b13cbfa26a294",
+  "prompts": {},
+  "sessions": {
+    "s_0bceba88ecf1a1": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019e7972-f839-7349-85bd-fc5f78659441",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ramiro <ramiro.carnicer@mercadolibre.com>"
+    },
+    "s_110ee32f32f5c7": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019e7979-4c22-7fa0-bbbe-73c286509729",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ramiro <ramiro.carnicer@mercadolibre.com>"
+    },
+    "s_73b490bb0f0e9e": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019e798e-0013-7de3-997b-5adb1596e135",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ramiro <ramiro.carnicer@mercadolibre.com>"
+    },
+    "s_96bfb8747a8336": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019e7975-1460-7bd0-a233-cdd209884f34",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ramiro <ramiro.carnicer@mercadolibre.com>"
+    },
+    "s_a03944ec63eea1": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019e7983-ec6f-7fd9-aba9-57a9df46b0c5",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ramiro <ramiro.carnicer@mercadolibre.com>"
+    },
+    "s_c1be55da288294": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019e797c-ee0e-7374-b821-44415631d742",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ramiro <ramiro.carnicer@mercadolibre.com>"
+    }
+  }
+}
