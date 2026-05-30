@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -438,7 +438,7 @@ function AuditRow({ ev, active, onClick, isNew }: { ev: EventItem; active: boole
   );
 }
 
-function AuditView({ events, selected, onSelect, dense }: { events: EventItem[]; selected: EventItem | null; onSelect: (e: EventItem) => void; dense: boolean }) {
+function AuditView({ events, selected, onSelect }: { events: EventItem[]; selected: EventItem | null; onSelect: (e: EventItem) => void; dense: boolean }) {
   const [filter, setFilter] = useState<'ALL' | Decision>('ALL');
   const filters: ('ALL' | Decision)[] = ['ALL', 'ALLOW', 'REQUIRE APPROVAL', 'BLOCK'];
   const shown = filter === 'ALL' ? events : events.filter((e) => e.decision === filter);
