@@ -21,12 +21,15 @@ const FIXTURE = resolve(
   "../../openspec/changes/wave-0-upstream-monad-poc/evidence/upstream/wallet-agent-tools-list.sanitized.json",
 );
 
-type FixtureTool = { name: string; description?: string; inputSchema?: unknown };
+type FixtureTool = { name: string; description?: string; inputSchema?: Record<string, unknown> };
+
+export function loadUpstreamTools(): FixtureTool[] {
+  const raw = JSON.parse(readFileSync(FIXTURE, "utf8")) as { tools?: FixtureTool[] } | FixtureTool[];
+  return Array.isArray(raw) ? raw : (raw.tools ?? []);
+}
 
 export function loadUpstreamToolNames(): string[] {
-  const raw = JSON.parse(readFileSync(FIXTURE, "utf8")) as { tools?: FixtureTool[] } | FixtureTool[];
-  const tools = Array.isArray(raw) ? raw : (raw.tools ?? []);
-  return tools.map((t) => t.name);
+  return loadUpstreamTools().map((t) => t.name);
 }
 
 /** Canned read-only/simulation responses, keyed by tool name. */
@@ -41,6 +44,8 @@ const CANNED_RESULTS: Record<string, unknown> = {
 export type MockUpstreamOptions = {
   /** If true, every callTool throws, simulating an upstream that errors. */
   failCalls?: boolean;
+  /** Tool names whose schema should be intentionally drifted for W2 integration tests. */
+  driftTools?: string[];
 };
 
 /**
@@ -52,13 +57,18 @@ export function createMockUpstream(options: MockUpstreamOptions = {}): {
   toolNames: string[];
   close: () => Promise<void>;
 } {
-  const toolNames = loadUpstreamToolNames();
+  const tools = loadUpstreamTools().map((tool) =>
+    options.driftTools?.includes(tool.name)
+      ? { ...tool, inputSchema: { type: "object" as const, properties: { drifted: { type: "boolean" } } } }
+      : tool,
+  );
+  const toolNames = tools.map((tool) => tool.name);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
 
   const server = new Server({ name: "wallet-agent", version: "0.1.0" }, { capabilities: { tools: {} } });
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: toolNames.map((name) => ({ name, inputSchema: { type: "object" as const } })),
+    tools: tools.map((tool) => ({ name: tool.name, description: tool.description, inputSchema: tool.inputSchema ?? { type: "object" as const } })),
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {

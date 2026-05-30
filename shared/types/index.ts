@@ -45,16 +45,19 @@ export type UpstreamState = {
   reason: string | null;
 };
 
-/** W1 SafeError codes. Reserved codes are typed but not emitted by W1 paths. */
+/** SafeError codes emitted by the W1 proxy plus W2 pre-policy registry gates. */
 export type SafeErrorCode =
-  // W1-emitted
   | "UNMAPPED_TOOL"
+  | "UNSUPPORTED_TOOL"
+  | "PRIVATE_KEY_MANAGEMENT_BLOCKED"
+  | "DANGEROUS_TOOL_BLOCKED"
+  | "SCHEMA_DRIFT"
   | "UPSTREAM_UNAVAILABLE"
   | "UPSTREAM_ERROR"
   | "MISSING_REQUIRED_EVIDENCE"
   | "POLICY_BLOCKED"
   | "INTERNAL_ERROR"
-  // reserved for W3/W4 — MUST NOT be emitted by W1 code paths
+  // reserved for W3/W4 — MUST NOT be emitted before those waves implement them
   | "UNSUPPORTED_CHAIN"
   | "DIGEST_MISMATCH"
   | "SIMULATION_FAILED"

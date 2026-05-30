@@ -1,20 +1,18 @@
 /**
  * tools/list mirror and host-exposure filter (W1).
  *
- * Caches the upstream tool inventory and decides what the host sees. In W1 the host-facing
- * exposure is intentionally EMPTY: no upstream tool is advertised before the W2 semantics
- * registry exists (Q1 decision; constitution "no exposure without registry" invariant).
- *
- * W2 plugs the real registry into `exposedTools()` here; the upstream cache it reads is already
- * provided by UpstreamClient.
+ * Caches the upstream tool inventory and decides what the host sees. W1+W2 exposes only
+ * upstream tools that are registered, schema-compatible, and default-allow in the W2 semantics
+ * registry. Mutating/signing default-block tools remain hidden until W3/W4 guarded forwarding.
  */
 
+import { filterHostExposedTools } from "./toolSemanticsBridge.ts";
 import type { UpstreamClient } from "./upstreamClient.ts";
 
 export type ExposedTool = {
   name: string;
   description?: string;
-  inputSchema: { type: "object" };
+  inputSchema: Record<string, unknown>;
 };
 
 export class ToolMirror {
@@ -29,13 +27,12 @@ export class ToolMirror {
     return this.upstream.getUpstreamToolNames().length;
   }
 
-  /**
-   * Host-facing tool list. W1: always empty.
-   *
-   * INJECTION POINT (W2): replace the empty return with the registry-filtered list, mapping
-   * upstream names to exposed names and attaching the registered input schemas.
-   */
+  /** Host-facing tool list filtered through the W2 registry before policy. */
   exposedTools(): ExposedTool[] {
-    return [];
+    return filterHostExposedTools(this.upstream.getUpstreamToolDescriptors()).map(({ descriptor, semantics }) => ({
+      name: semantics.exposed_name,
+      description: descriptor.description,
+      inputSchema: descriptor.inputSchema ?? { type: "object" },
+    }));
   }
 }

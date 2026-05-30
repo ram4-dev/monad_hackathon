@@ -9,8 +9,8 @@ import { AuditLog } from "../back/services/audit/auditLog.ts";
 import { createMockUpstream } from "./fixtures/mock-upstream.ts";
 import { testConfig, cleanup } from "./fixtures/helpers.ts";
 
-async function buildHostClient() {
-  const mock = createMockUpstream();
+async function buildHostClient(options: Parameters<typeof createMockUpstream>[0] = {}) {
+  const mock = createMockUpstream(options);
   const config = testConfig();
   const upstream = new UpstreamClient(config, mock.factory);
   await upstream.connect();
@@ -27,30 +27,46 @@ async function buildHostClient() {
   return { host, upstream, mock, server, auditPath: config.auditPath };
 }
 
+async function closeCtx(ctx: Awaited<ReturnType<typeof buildHostClient>>) {
+  await ctx.host.close();
+  await ctx.upstream.shutdown();
+  await ctx.mock.close();
+  cleanup(ctx.auditPath);
+}
+
 describe("host-facing tools/list", () => {
-  test("returns an empty list in W1 even though the upstream exposes 42 tools", async () => {
+  test("returns W2 registry-filtered default-allow tools from the upstream inventory", async () => {
     const ctx = await buildHostClient();
     expect(ctx.upstream.getUpstreamToolNames().length).toBe(42);
 
     const listed = await ctx.host.listTools();
-    expect(listed.tools).toEqual([]);
+    const names = listed.tools.map((t) => t.name).sort();
 
-    await ctx.host.close();
-    await ctx.upstream.shutdown();
-    await ctx.mock.close();
-    cleanup(ctx.auditPath);
+    expect(names).toEqual([
+      "estimate_gas",
+      "get_balance",
+      "get_token_balance",
+      "get_wallet_info",
+      "simulate_transaction",
+    ]);
+    expect(listed.tools.every((tool) => tool.inputSchema?.type === "object")).toBe(true);
+
+    await closeCtx(ctx);
   });
 
-  test("no upstream tool name is advertised to the host", async () => {
-    const ctx = await buildHostClient();
+  test("does not advertise unmapped, private-key, schema-drifted, or default-block tools", async () => {
+    const ctx = await buildHostClient({ driftTools: ["get_balance"] });
     const listed = await ctx.host.listTools();
     const names = listed.tools.map((t) => t.name);
+
     expect(names).not.toContain("get_balance");
     expect(names).not.toContain("send_transaction");
+    expect(names).not.toContain("transfer_token");
+    expect(names).not.toContain("approve_token");
+    expect(names).not.toContain("sign_typed_data");
+    expect(names).not.toContain("import_private_key");
+    expect(names).not.toContain("connect_wallet");
 
-    await ctx.host.close();
-    await ctx.upstream.shutdown();
-    await ctx.mock.close();
-    cleanup(ctx.auditPath);
+    await closeCtx(ctx);
   });
 });

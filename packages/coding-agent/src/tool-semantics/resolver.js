@@ -40,13 +40,16 @@ function resolveToolDescriptor(descriptorOrFixture) {
     });
   }
 
-  const blockReason = classifyBlockedTool(descriptorOrFixture || { name: toolName });
-  if (blockReason) {
-    return blocked(toolName, blockReason);
+  const preRegistryBlockReason = classifyBlockedTool(descriptorOrFixture || { name: toolName });
+  if (preRegistryBlockReason === SAFE_REASON_CODES.PRIVATE_KEY_MANAGEMENT_BLOCKED) {
+    return blocked(toolName, preRegistryBlockReason);
   }
 
   const semantics = getToolSemantics(toolName);
   if (!semantics) {
+    if (preRegistryBlockReason) {
+      return blocked(toolName, preRegistryBlockReason);
+    }
     return blocked(toolName, SAFE_REASON_CODES.UNMAPPED_TOOL, { status: 'hidden' });
   }
 

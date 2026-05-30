@@ -11,7 +11,7 @@ import { createMockUpstream } from "./fixtures/mock-upstream.ts";
 import { testConfig, cleanup } from "./fixtures/helpers.ts";
 
 describe("compass meta-tools", () => {
-  test("compass_status reflects connected upstream and exposed_tool_count 0", async () => {
+  test("compass_status reflects connected upstream and W2-filtered exposed tool count", async () => {
     const mock = createMockUpstream();
     const cfg = testConfig();
     const upstream = new UpstreamClient(cfg, mock.factory);
@@ -23,7 +23,7 @@ describe("compass meta-tools", () => {
     expect(status.upstream.managed_by_compass).toBe(true);
     expect(status.upstream.server_name).toBe("wallet-agent");
     expect(status.upstream.upstream_tool_count).toBe(42);
-    expect(status.exposed_tool_count).toBe(0);
+    expect(status.exposed_tool_count).toBe(5);
     expect(status.chain_label).toBe("monad-testnet");
 
     await upstream.shutdown();
@@ -63,7 +63,7 @@ describe("compass meta-tools", () => {
     const statusRes = (await host.callTool({ name: "compass_status", arguments: {} })) as {
       structuredContent?: { exposed_tool_count?: number };
     };
-    expect(statusRes.structuredContent?.exposed_tool_count).toBe(0);
+    expect(statusRes.structuredContent?.exposed_tool_count).toBe(5);
 
     // generate one audit event then read it back
     await host.callTool({ name: "compass_audit_events", arguments: { limit: 10 } });
