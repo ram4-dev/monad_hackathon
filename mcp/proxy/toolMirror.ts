@@ -17,9 +17,11 @@ export type ExposedTool = {
 
 export class ToolMirror {
   private readonly upstream: UpstreamClient;
+  private readonly guardedActive: boolean;
 
-  constructor(upstream: UpstreamClient) {
+  constructor(upstream: UpstreamClient, guardedActive = false) {
     this.upstream = upstream;
+    this.guardedActive = guardedActive;
   }
 
   /** Internal upstream inventory count (for compass_status), not host-exposed. */
@@ -29,7 +31,7 @@ export class ToolMirror {
 
   /** Host-facing tool list filtered through the W2 registry before policy. */
   exposedTools(): ExposedTool[] {
-    return filterHostExposedTools(this.upstream.getUpstreamToolDescriptors()).map(({ descriptor, semantics }) => ({
+    return filterHostExposedTools(this.upstream.getUpstreamToolDescriptors(), this.guardedActive).map(({ descriptor, semantics }) => ({
       name: semantics.exposed_name,
       description: descriptor.description,
       inputSchema: descriptor.inputSchema ?? { type: "object" },

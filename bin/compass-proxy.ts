@@ -76,8 +76,6 @@ async function main(): Promise<void> {
     audit.record({ action: "upstream_unavailable", result: "failed", source: "system", metadata: { reason_code: "upstream_connect_failed" } });
   }
 
-  const mirror = new ToolMirror(upstream);
-
   // W4/W5 guarded pipeline: enabled only when an on-chain policy contract is configured.
   // Without it, the proxy keeps the W1/W2 behavior (registry-gated direct forward).
   let guarded = null;
@@ -95,6 +93,9 @@ async function main(): Promise<void> {
   }
 
   const interceptor = new CallInterceptor(upstream, audit, guarded);
+  // When the guarded pipeline is active, expose all registry-visible tools (write/signature
+  // included); the on-chain policy + simulation + LLM gate them at call time.
+  const mirror = new ToolMirror(upstream, !!guarded);
 
   const transport = new StdioServerTransport();
   await startProxyServer({ config, upstream, mirror, interceptor, audit }, transport);

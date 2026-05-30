@@ -82,17 +82,21 @@ export type HostVisibleTool = {
 };
 
 /**
- * Host tools/list exposure for W1+W2: registered + schema-compatible + default-allow only.
- * Mutating/signing tools remain call-blocked until W3/W4 policy/evidence/guarded forwarding.
+ * Host tools/list exposure.
+ * - W1/W2 (default): registered + schema-compatible + default-allow only. Mutating/signing tools
+ *   stay hidden until guarded forwarding exists.
+ * - With the W4/W5 guarded pipeline active (`exposeAllVisible=true`): expose ALL registry-visible
+ *   tools (write/signature included). They remain gated at call time by the on-chain policy +
+ *   simulation + LLM. `status !== "visible"` (private-key/keystore/unmapped/drifted) stays hidden.
  */
-export function filterHostExposedTools(descriptors: UpstreamToolDescriptor[]): HostVisibleTool[] {
+export function filterHostExposedTools(descriptors: UpstreamToolDescriptor[], exposeAllVisible = false): HostVisibleTool[] {
   const hashed = descriptors.map(withInputSchemaHash);
   const descriptorByName = new Map(hashed.map((descriptor) => [descriptor.name, descriptor]));
 
   return toolSemantics
     .filterVisibleTools(hashed)
     .filter((result): result is Extract<W2Resolution, { status: "visible" }> => result.status === "visible")
-    .filter((result) => result.semantics.default_decision === "allow")
+    .filter((result) => exposeAllVisible || result.semantics.default_decision === "allow")
     .map((result) => ({
       descriptor: descriptorByName.get(result.tool_name) ?? { name: result.tool_name },
       semantics: result.semantics,
