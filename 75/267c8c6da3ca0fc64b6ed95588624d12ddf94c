@@ -1,0 +1,78 @@
+packages/coding-agent/src/tool-semantics/index.js
+  s_07f67072b8ae7b::t_f6b5ceeaa877c8 1-9
+openspec/changes/wave-2-tool-semantics-registry-fixture-first/specs/tool-semantics-registry/spec.md
+  s_64799838bd42e1::t_c7124a07b8ed9d 1-111
+packages/coding-agent/src/tool-semantics/walletAgentRegistry.js
+  s_07f67072b8ae7b::t_f6b5ceeaa877c8 1-178
+openspec/changes/wave-2-tool-semantics-registry-fixture-first/specs/tool-semantics-handoff/spec.md
+  s_64799838bd42e1::t_088658f15dcbff 1-128
+packages/coding-agent/src/tool-semantics/unsupportedCapabilities.js
+  s_07f67072b8ae7b::t_f6b5ceeaa877c8 1-31
+openspec/changes/wave-2-tool-semantics-registry-fixture-first/design.md
+  s_440c8c16668d5f::t_64620ee9dc67fb 1-476
+packages/coding-agent/src/tool-semantics/blockedToolRules.js
+  s_07f67072b8ae7b::t_f6b5ceeaa877c8 1-61
+packages/coding-agent/src/tool-semantics/resolver.js
+  s_07f67072b8ae7b::t_f6b5ceeaa877c8 1-83
+packages/coding-agent/src/tool-semantics/types.js
+  s_07f67072b8ae7b::t_f6b5ceeaa877c8 1-35
+openspec/changes/wave-2-tool-semantics-registry-fixture-first/apply-progress.md
+  s_07f67072b8ae7b::t_c0cce1ed8109dd 1-172
+openspec/changes/wave-2-tool-semantics-registry-fixture-first/proposal.md
+  s_65faace67c82de::t_d96f5552d482ec 1-149
+openspec/changes/wave-2-tool-semantics-registry-fixture-first/specs/tool-semantics-resolution/spec.md
+  s_64799838bd42e1::t_bf92d87f1c8118 1-159
+openspec/changes/wave-2-tool-semantics-registry-fixture-first/tasks.md
+  s_5632af3751fddb::t_5a41389438ba73 1-8,17-18,20-32,34-40,42-50,52-58,60-64,66-69,72-76,78-80,82-86,89-93,98-102,104-105,108-122,124-130,132-139,142-144,146-150
+  s_07f67072b8ae7b::t_4557899444e911 11-16,19,33,41,51,59,65,70-71,77,81,87-88,94-97,103,106-107,123,131,140-141,151-158
+  s_07f67072b8ae7b::t_0b0deac652083f 145
+  s_07f67072b8ae7b::t_5f720efebe59ed 9-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "75267c8c6da3ca0fc64b6ed95588624d12ddf94c",
+  "prompts": {},
+  "sessions": {
+    "s_07f67072b8ae7b": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019e79da-4b81-70e6-8c8b-3e928b2b0d26",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ramiro <ramiro.carnicer@mercadolibre.com>"
+    },
+    "s_440c8c16668d5f": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019e79d2-f6f8-72db-a123-1bbb0fc40984",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ramiro <ramiro.carnicer@mercadolibre.com>"
+    },
+    "s_5632af3751fddb": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019e79d7-2c21-71c6-ada6-dbb20f0b26a0",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ramiro <ramiro.carnicer@mercadolibre.com>"
+    },
+    "s_64799838bd42e1": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019e79c9-d5a6-762e-b19d-3283d629d885",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ramiro <ramiro.carnicer@mercadolibre.com>"
+    },
+    "s_65faace67c82de": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019e79c4-c723-7740-bcbc-db8ea0c3c022",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ramiro <ramiro.carnicer@mercadolibre.com>"
+    }
+  }
+}
