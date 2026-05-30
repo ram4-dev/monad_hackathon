@@ -1,0 +1,64 @@
+packages/dashboard/tailwind.config.ts
+  s_f78ffb2bf4633c::t_7eb20505ee12b9 1-24
+packages/dashboard/package.json
+  s_f78ffb2bf4633c::t_8fc1f5c0d7234a 1-25
+packages/dashboard/tsconfig.node.json
+  s_f78ffb2bf4633c::t_db65c9a3042c76 1-13
+packages/dashboard/src/App.tsx
+  s_d0a2c11ee03cb5::t_5cbe363a7fd9da 26-27,33-34,61,63,65-67,69-71,73-74,81,89-90,98,146,161,202,324,369,372,400,436,481,530,535,554,617,619,758-760,784,820-821,931,1012,1019
+  s_f78ffb2bf4633c::t_7cbf79ae60ed8c 2,5,15,25,28-30,32,40,76,83-84,91-92,115,140-141,155-156,162,189-190,392,440,616,761,763,785,886-887,920,923
+  s_48409235b17ff5::t_550969f1ea18bf 1,3-4,6-14,16-24,31,35-39,41-60,62,64,68,72,75,77-80,82,85-88,93-97,99-114,116-139,142-145,148-154,157-160,163-188,191-201,203-323,325-368,370-371,373-391,393-399,401-435,437-439,441-480,482-529,531-534,536-553,555-615,618,620-757,762,764-783,786-819,822-885,888-919,921-922,924-930,932-1011,1013-1018
+packages/dashboard/README.md
+  s_d0a2c11ee03cb5::t_278f61650a7a26 1,3,5-7,10,26-28
+  s_f78ffb2bf4633c::t_c9c8dbdd100697 2,4,8-9,11-25
+packages/dashboard/tsconfig.app.json
+  s_f78ffb2bf4633c::t_81d5c7aab1b71f 1-21
+packages/dashboard/vite.config.ts
+  s_f78ffb2bf4633c::t_713e607cc89aef 1-6
+packages/dashboard/src/index.css
+  s_d0a2c11ee03cb5::t_604ec647fc5be6 1
+packages/dashboard/tsconfig.json
+  s_f78ffb2bf4633c::t_97d07206e9f1ad 1-7
+packages/dashboard/index.html
+  s_f78ffb2bf4633c::t_294689be5d9153 1-7,9-12
+  s_48409235b17ff5::t_71145eea2ccbc8 8
+packages/dashboard/src/tokens.css
+  s_48409235b17ff5::t_85594df4f96a9b 1-6,10,13-17,19,24-25,27,29,34,36,39,42-44,46-104,108-155
+  s_d0a2c11ee03cb5::t_ea4678d12bb73e 7-9,11-12,18,20-23,26,28,30-33,35,37-38,40-41,45,105-107
+packages/dashboard/src/main.tsx
+  s_f78ffb2bf4633c::t_9356899fbcb22b 1-10
+packages/dashboard/postcss.config.cjs
+  s_f78ffb2bf4633c::t_f9a1b1910ef001 1-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "6b0c418650a0b3170bec655416dfd8bbef3ca886",
+  "prompts": {},
+  "sessions": {
+    "s_48409235b17ff5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d6dbf470-d2da-42d6-b589-bef9c1b7687e",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Ramiro <ramiro.carnicer@mercadolibre.com>"
+    },
+    "s_d0a2c11ee03cb5": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019e7a29-e5db-7b5a-8302-5cecdffdadcd",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "Ramiro <ramiro.carnicer@mercadolibre.com>"
+    },
+    "s_f78ffb2bf4633c": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019e7a0a-645c-7bb1-a4fe-6f516f859d4e",
+        "model": "gpt-5.3-codex"
+      },
+      "human_author": "Ramiro <ramiro.carnicer@mercadolibre.com>"
+    }
+  }
+}
