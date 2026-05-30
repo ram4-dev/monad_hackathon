@@ -52,9 +52,11 @@ Official Monad references: `https://docs.monad.xyz/developer-essentials/testnets
 
 ## Affected Areas
 
-- Per-tool wiring in the W4 pipeline + `ToolSemantics` (W2) entries for each P0 tool.
-- `back/services/evm/*` for Monad RPC behavior and the policy-contract lifecycle action.
-- Tests against mock upstream + mock policy reader; real upstream/testnet only under consent.
+Code lives in `packages/coding-agent/` (**pure JavaScript `.js`**, matching W2/W3); the policy contract lives in `packages/coding-agent/contracts/` with `deployments/monad-testnet`.
+
+- Per-tool wiring through the W4 `packages/coding-agent/src/guarded-forward/` orchestrator + `packages/coding-agent/src/tool-semantics/walletAgentRegistry.js` (W2) entries for each P0 tool.
+- `packages/coding-agent/src/policy-source/` + `policy/` (W3) for on-chain policy reads; `packages/coding-agent/contracts/` + `deployments/monad-testnet` for the per-user policy-contract lifecycle.
+- Tests under `packages/coding-agent/test/**/*.test.js` against a mock upstream + mock policy reader; real upstream/testnet only under consent.
 
 ## Safety Requirements
 

@@ -31,7 +31,7 @@ W6 hardens and documents the W1–W5 runtime. It MUST NOT introduce new architec
 
 ### 3. [ ] Critical test suite
 **Steps:** registry, on-chain policy read + fail-closed, blocked-never-upstream, digest + mismatch, idempotency, audit redaction, per-user isolation, LLM veto + fail-closed, allowance rules.
-**Acceptance:** `bun test` green; coverage includes fail-closed + isolation, not just happy path.
+**Acceptance:** `npm test` (node --test) green in `packages/coding-agent`; coverage includes fail-closed + isolation, not just happy path.
 
 ### 4. [ ] Operations runbook
 **Steps:** RPC provider + caveats; policy-contract deploy (foundry/hardhat); `eth_call` reads; faucet/account setup (no secrets).

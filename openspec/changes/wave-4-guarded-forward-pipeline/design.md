@@ -34,32 +34,39 @@ tools/call (host)
 
 ## Target module layout (constitution §9)
 
+Code lives in the existing `packages/coding-agent/` package (**pure JavaScript `.js`**, matching W2/W3). W4 **reuses** the W2/W3 modules and adds only the new pieces; it does not reinvent policy/risk/audit. The root `mcp/proxy/` runtime bridges into the package the same way W2 did (`mcp/proxy/toolSemanticsBridge.ts` → `require("../../packages/coding-agent/src/...")`).
+
 ```text
-mcp/proxy/callInterceptor.ts        # full pipeline (replaces W1 skeleton)
-back/services/
-  evm/
-    rpc.ts                          # viem/RPC client for Monad Testnet reads (eth_call)
-    digest.ts                       # canonical candidate_tx_digest builder
-  policy/
-    policyResolver.ts               # user identity (W3 iface) -> policy contract address
-    onchainPolicyReader.ts          # read policy state via RPC; cache + freshness; fail-closed
-    evaluatePolicy.ts               # allow|block against the on-chain policy snapshot
-  risk/
-    riskChecks.ts                   # chain/allowance/gas/evidence risk checks
-  llm/
-    finalSafetyReview.ts            # veto-only LLM reviewer (sanitized context -> verdict)
-    sanitizeContext.ts              # strips secrets before sending to the LLM
-  idempotency/
-    idempotencyStore.ts             # key -> result reuse; no double execution
-shared/types                        # extended SafeError, GuardedForwardRecord, verdict types
+packages/coding-agent/src/
+  tool-semantics/              # REUSE (W2): resolver.js, walletAgentRegistry.js, types.js, blockedToolRules.js
+  policy-source/               # REUSE (W3): policyContractClient.js, policyCache.js, policySnapshot.js,
+                               #             policySourceConfig.js, compassPolicyAbi.js, policySourceErrors.js
+  policy/                      # REUSE (W3): evaluatePolicy.js, policyDecision.js, policyToolKeys.js, keccak256.js
+  risk/                        # REUSE (W3): riskChecks.js, policySourceRisk.js, riskTypes.js
+  safe-errors/                 # REUSE + EXTEND (W3): safeError.js, redact.js (add W4 codes)
+  audit/                       # REUSE (W3): auditEvent.js, auditWriter.js, auditRedaction.js
+  guarded-forward/             # NEW: orchestrator wiring the ordered pipeline + GuardedForwardRecord
+    guardedForward.js          #   registry -> evidence -> simulation -> risk -> policy -> allow/block -> LLM -> forward
+    guardedForwardRecord.js    #   record builder incl. on-chain policy_source snapshot
+  digest/                      # NEW: candidateTxDigest.js (canonical digest builder)
+  idempotency/                 # NEW: idempotencyStore.js (key -> result reuse; no double execution)
+  llm/                         # NEW: finalSafetyReview.js (veto-only reviewer), sanitizeContext.js
+mcp/proxy/
+  guardedForwardBridge.ts      # NEW (root, TS): wires runtime tools/call to guarded-forward (W2 bridge pattern)
 ```
+
+Identity + on-chain policy reads are already provided by W3's `policy-source/` and `policy/` modules; W4 consumes them and does not duplicate the read client.
 
 ## Key contracts
 
-### On-chain policy interface (consumed from W3, abstract)
-- `resolveUserIdentity(callContext) -> UserId` — defined by W3; W4 treats it as opaque.
-- `resolvePolicyContract(userId) -> { address, chainId: 10143 }`.
-- `readPolicy(address) -> PolicySnapshot { version, block, rules }` via `eth_call`; cached with a freshness window; on any failure the reader returns "unavailable" → block.
+### On-chain policy interface (consumed from W3's `policy-source/` + `policy/`)
+W4 does not implement policy reads; it calls W3's existing modules:
+- `policy-source/policyContractClient.js` — read-only ABI client (`eth_call`) against the deployed policy contract (chain `10143`).
+- `policy-source/policySnapshot.js` — shape normalization + schema/version validation → `PolicySnapshot { version, block, rules }`.
+- `policy-source/policyCache.js` — optional fresh-cache (disabled by default); freshness window.
+- `policy-source/policySourceConfig.js` / `compassPolicyAbi.js` / `policySourceErrors.js` — binding/config + ABI + fail-closed error categories.
+- `policy/evaluatePolicy.js` + `policy/policyDecision.js` — W2 resolver output + `PolicySnapshot` → `allow|block`.
+- User identity is provided by the W3/runtime context; W4 treats it as opaque and reconciles with W3 if the binding changes. Any read/RPC/ABI/schema/chain/version failure → `block` (fail-closed).
 
 ### GuardedForwardRecord (constitution §8, extended)
 Adds `policy_source`:
@@ -98,7 +105,7 @@ llm_review?: { ran: boolean; verdict: "safe" | "unsafe" | "unavailable"; reason_
 
 ## Rollback
 
-- Remove the new `back/services/*` modules and revert `callInterceptor.ts` to the W1 skeleton. No external mutation is introduced by W4.
+- Remove the new `packages/coding-agent/src/{guarded-forward,digest,idempotency,llm}/` modules and `mcp/proxy/guardedForwardBridge.ts`; the W2/W3 modules and the W1 proxy remain functional. No external mutation is introduced by W4.
 
 ## Validation checklist
 

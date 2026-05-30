@@ -16,9 +16,9 @@ Local sources of truth (constitution overrides product spec and wave docs on con
 
 Upstream interfaces consumed:
 
-- **W1** — `mcp/proxy/callInterceptor.ts` (stage scaffold), `mcp/proxy/upstreamClient.ts`, `back/services/audit/auditLog.ts`, `mcp/proxy/schemas.ts` (`SafeError`).
-- **W2** — the tool semantics registry (`ToolSemantics`, `tool_class`, `required_fields`, `required_evidence`, `requires_simulation`, `policy_checks`).
-- **W3** — the **on-chain per-user policy contract**, the **user identity** interface, and the policy **read** interface. Kept abstract here and reconciled with W3.
+- **W1** — root runtime proxy `mcp/proxy/` (server/upstream lifecycle) and its bridge pattern `mcp/proxy/toolSemanticsBridge.ts` → `packages/coding-agent/src/...`.
+- **W2** — `packages/coding-agent/src/tool-semantics/` (`resolver.js`, `walletAgentRegistry.js`, `types.js`, `blockedToolRules.js`): `tool_class`, `required_fields`, `required_evidence`, `requires_simulation`, `policy_checks`.
+- **W3** — `packages/coding-agent/src/policy-source/` (on-chain policy read client/cache/snapshot/config/ABI/errors), `packages/coding-agent/src/policy/` (`evaluatePolicy.js`, `policyDecision.js`), `packages/coding-agent/src/risk/`, `packages/coding-agent/src/safe-errors/`, `packages/coding-agent/src/audit/`, plus the deployed policy contract under `packages/coding-agent/contracts/` and `deployments/monad-testnet`. User identity binding is owned by W3 and treated as opaque here.
 
 Official Monad references:
 
@@ -63,10 +63,12 @@ Official Monad references:
 
 ## Affected Areas
 
-- `mcp/proxy/callInterceptor.ts` — replaces the W1 skeleton with the full pipeline.
-- New: `back/services/evm/` (RPC/viem reads, digest), `back/services/policy/` (on-chain policy resolver/reader + evaluation), `back/services/risk/`, `back/services/llm/` (final safety reviewer), `back/services/idempotency/`.
-- `mcp/proxy/schemas.ts` / `shared/types` — extended `SafeError`, `GuardedForwardRecord`, audit fields.
-- Tests under `tests/` with a mock upstream (W1 fixtures), a mock on-chain policy reader, and a mock LLM reviewer.
+Code lives in the existing `packages/coding-agent/` package (**pure JavaScript `.js`**, matching W2/W3). W4 reuses W2/W3 modules and adds only new pieces.
+
+- **Reuse (no reinvention):** `packages/coding-agent/src/tool-semantics/` (W2 resolver/registry), `packages/coding-agent/src/policy/` + `packages/coding-agent/src/policy-source/` (W3 on-chain policy read + evaluation), `packages/coding-agent/src/risk/` (W3), `packages/coding-agent/src/safe-errors/` (W3, extended with W4 codes), `packages/coding-agent/src/audit/` (W3).
+- **New modules:** `packages/coding-agent/src/guarded-forward/` (pipeline orchestrator + `GuardedForwardRecord`), `packages/coding-agent/src/digest/` (`candidate_tx_digest`), `packages/coding-agent/src/idempotency/`, `packages/coding-agent/src/llm/` (final safety reviewer + context sanitizer).
+- **Runtime wiring:** a new root `mcp/proxy/guardedForwardBridge.ts` following the W2 `mcp/proxy/toolSemanticsBridge.ts` pattern, invoking the package orchestrator on `tools/call`.
+- **Tests:** `packages/coding-agent/test/` with a mock upstream (W1 fixtures), the W3 policy-source against a mock/test contract, and a mock LLM reviewer.
 
 ## Safety Requirements
 
@@ -85,7 +87,7 @@ Official Monad references:
 
 ## Rollback
 
-- Revert the `wave-4-guarded-forward-pipeline` change and the new `back/services/*` modules; W1 skeleton remains functional (empty tools/list, read-only provisional forwarding).
+- Revert the `wave-4-guarded-forward-pipeline` change and the new `packages/coding-agent/src/{guarded-forward,digest,idempotency,llm}/` modules + `mcp/proxy/guardedForwardBridge.ts`; W2/W3 modules and the W1 proxy remain functional.
 - No persistent external state is introduced beyond the local idempotency store and audit log (both git-ignored/local).
 
 ## Success Criteria

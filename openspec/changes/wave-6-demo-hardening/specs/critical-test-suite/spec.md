@@ -38,10 +38,10 @@ The suite MUST assert that one user's policy never governs another user's call.
 
 ### Requirement: Suite Passes In CI-Like Run
 
-The suite MUST pass via `bun test` and the project MUST typecheck via `bun run typecheck`.
+The suite MUST pass via `npm test` (`node --test`) in `packages/coding-agent`.
 
 #### Scenario: Green suite
 
 - GIVEN the repository at release readiness
-- WHEN `bun test` and `bun run typecheck` run
-- THEN both succeed
+- WHEN `npm test` runs in `packages/coding-agent`
+- THEN the suite succeeds

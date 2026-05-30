@@ -59,4 +59,4 @@ W5 applies the W4 gate to each P0 tool and adds the per-user policy-contract lif
 
 ### 9. [ ] Tests + apply/verify reports
 **Steps:** per-class tests on mock; consent-gated real tests; map requirements to evidence; record blockers.
-**Acceptance:** `bun test` green; `bun run typecheck` clean; verify-report maps specs to evidence.
+**Acceptance:** `npm test` (node --test) green in `packages/coding-agent`; verify-report maps specs to evidence.
