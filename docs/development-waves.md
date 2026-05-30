@@ -1,263 +1,434 @@
 # Compass Monad — waves de desarrollo
 
-Este plan baja `docs/constitution.md` y `compass_product_spec.md` a waves incrementales con dependencias explícitas. Para este repo, la **constitución manda** cuando hay tensión con el product spec: el P0 apunta a Claude Code vía MCP, Monad testnet, Dynamic embedded EVM wallet y signing backend con Delegated Access.
+Este plan baja `docs/constitution.md` v0.6 y `compass_product_spec_monad_mcp_proxy_v0.2.md` a waves implementables. Si hay tensión entre documentos, **manda la constitución**: P0 es un **MCP security proxy** dentro de Claude/Codex/Cursor, con **Wallet Agent como MCP upstream**, Monad Testnet, registry de semántica, policy `allow|block`, digest, idempotencia y audit local append-only.
+
+## Quick path
+
+1. Validar Wallet Agent + Monad Testnet como upstream real.
+2. Construir `compass-proxy` como MCP server frente al host y MCP client frente a Wallet Agent.
+3. Filtrar `tools/list` con un registry pre-mapeado de semántica.
+4. Interceptar `tools/call`: evidencia → simulación/inspección → policy → `allow|block`.
+5. Forwardear al upstream solo cuando Compass decide `allow`.
+6. Endurecer demo: blocked allowances, no bypass, audit, digest e idempotencia.
 
 ## Norte P0
 
 Demo objetivo:
 
 ```text
-Claude Code -> Compass MCP local -> Compass backend
-  -> review/policy/audit -> Dynamic delegated signing -> Monad testnet
+Claude Code / Claude Desktop / Codex / Cursor
+        |
+        v
+Compass MCP Security Proxy
+  - MCP server frente al host
+  - MCP client frente al upstream
+  - registry-first tools/list filtering
+  - guarded tools/call forwarding
+        |
+        v
+Wallet Agent MCP upstream
+        |
+        v
+Monad Testnet RPC
 ```
 
 Reglas que condicionan todas las waves:
 
-- No hay raw signing desde Claude ni tool genérica `sign_raw_transaction`.
-- La web P0 solo hace onboarding humano: login, wallet embedded EVM, delegación y estado ready.
-- Toda ejecución pasa por `review_id`, digest canónico, policy `allow`, idempotencia y audit.
-- Los blockers de validación de `docs/constitution.md#13` se resuelven antes de depender de ellos en ejecución real.
+- El host ve **Compass**, no Wallet Agent directo.
+- No hay aprobación humana/manual ni UI de approval en P0.
+- `approve_token` significa allowance on-chain; se permite solo con policy explícita exacta.
+- Una tool no mapeada en el registry se oculta o se bloquea antes de llegar a policy.
+- Orden obligatorio: `registry -> evidencia/simulación -> policy -> allow/block`.
+- Writes/signatures/broadcast requieren `candidate_tx_digest` cuando aplique.
+- Toda tool que pueda hacer broadcast/execution requiere idempotencia.
+- Audit local append-only y sin secretos.
+
+## Cómo leer dependencias
+
+- **Hard dependency:** la wave no puede cerrarse ni alimentar a la siguiente sin esa dependencia terminada.
+- **Soft dependency:** la wave puede avanzar con mocks, fixtures o valores provisionales, pero debe reconciliarse antes de demo.
+- **Start gate:** condición mínima para empezar trabajo útil.
+- **Exit gate:** condición concreta que desbloquea waves posteriores.
 
 ## Dependency graph
 
 ```text
-W0 External validations
-  ├─> W1 Contracts, config, storage
-  │     ├─> W2 Auth, bootstrap, pairing, setup web
-  │     │     ├─> W3 Secure delegation registration + wallet state
-  │     │     │     └─> W5 Execution gateway
-  │     │     └─> W6 MCP tools and local runtime
-  │     └─> W4 Guarded review pipeline
-  │           ├─> W5 Execution gateway
-  │           └─> W6 MCP tools and local runtime
-  └─> W3 Secure delegation registration + wallet state
-
-W5 + W6 -> W7 Demo hardening and release readiness
+W0 Upstream + Monad PoC ──────────────┬─> W2 Tool semantics registry ──> W3 Policy/risk/audit ─┐
+                                      │                                                        │
+                                      └──────────────────────────────────────────────────────┐ │
+                                                                                             v v
+W1 MCP proxy skeleton + adapter ───────────────────────────────────────────────────────────> W4 Guarded forward pipeline
+                                                                                             |
+                                                                                             v
+                                                                                         W5 Monad action coverage
+                                                                                             |
+                                                                                             v
+                                                                                         W6 Demo hardening
 ```
+
+Regla de paralelización: **W1 puede arrancar en paralelo con W0 usando un upstream mock**. W0 se vuelve hard dependency cuando una wave necesita datos reales de Wallet Agent/Monad: schema hashes, simulación real, gas/RPC y PoC de forwarding.
 
 ## Wave summary
 
-| Wave | Name                                          | Hard dependencies                                         | Soft dependencies                                           | Unlocks                                                                                      |
-| ---- | --------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| W0   | External validations                          | none                                                      | none                                                        | Safe technical assumptions for Monad/Dynamic/delegation.                                     |
-| W1   | Contracts, config, storage                    | none                                                      | W0 for final chain values                                   | Shared schemas, DB base, redaction and test foundation.                                      |
-| W2   | Auth, bootstrap, pairing, setup web           | W1                                                        | W0 for final URLs/chain copy                                | MCP sessions, scoped tokens, setup URL, web onboarding.                                      |
-| W3   | Secure delegation registration + wallet state | W0, W1, W2                                                | none                                                        | Active delegation registry, safe wallet state and backend-only signer adapter; no execution. |
-| W4   | Guarded review pipeline                       | W1, W2                                                    | W3 for real wallet/delegation context; can start with mocks | `review_intent` safety gate with digest, risk, policy and audit.                             |
-| W5   | Execution gateway                             | W2, W3, W4                                                | none                                                        | Idempotent guarded signing/broadcast for reviewed transactions.                              |
-| W6   | MCP tools and local runtime                   | W2 for bootstrap/status; W3 wallet; W4 review; W5 execute | none                                                        | Claude Code demo surface.                                                                    |
-| W7   | Demo hardening and release readiness          | W0–W6                                                     | none                                                        | End-to-end confidence, docs, tests and reviewable demo.                                      |
+| Wave | Name                                  | Hard dependencies                    | Soft dependencies                     | Unlocks                                                                                  |
+| ---- | ------------------------------------- | ------------------------------------ | ------------------------------------- | ---------------------------------------------------------------------------------------- |
+| W0   | Upstream + Monad PoC                  | none                                 | none                                  | Facts reales: Wallet Agent schemas, Monad RPC behavior, schema hashes y PoC constraints. |
+| W1   | MCP proxy skeleton + upstream adapter | none                                 | W0 para conectar al Wallet Agent real | Proxy MCP server/client, upstream process wiring y fixtures de integración.              |
+| W2   | Tool semantics registry               | W0 schema capture para versión final | W1 integration shape                  | Registry-first tool exposure, `input_schema_hash` y bloqueo de unmapped tools.           |
+| W3   | Policy, risk and audit foundation     | W2 registry shape/classes            | W0 gas/RPC facts finales              | Policy `allow\|block`, safe errors, risk checks y audit append-only.                     |
+| W4   | Guarded forward pipeline              | W1, W2, W3                           | W0 real simulation behavior           | `tools/call` interception, digest, idempotency, forward/block.                           |
+| W5   | Monad action coverage                 | W0, W4                               | none                                  | P0 Wallet Agent tools funcionando de forma segura en Monad Testnet.                      |
+| W6   | Demo hardening and release readiness  | W5                                   | none                                  | Demo reproducible, tests, docs y no-bypass proof.                                        |
 
-## Dependency details
+## Dependency contract per wave
 
-| Wave | Depends on         | Why it depends on them                                                                                                                                      | Can start before dependency is complete?                                                |
-| ---- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| W0   | none               | It validates external assumptions before we encode them into architecture.                                                                                  | yes — it is the first track.                                                            |
-| W1   | none hard; W0 soft | Schemas, DB and config can be scaffolded with provisional Monad values, but final chain/signing constants should wait for W0 evidence.                      | yes, with provisional config and TODOs tied to W0.                                      |
-| W2   | W1                 | Bootstrap, pairing, token hashing, scopes, sessions and audit need W1 schemas/storage/redaction first.                                                      | no for production routes; only sketches/mocks.                                          |
-| W3   | W0, W1, W2         | Delegation needs validated Dynamic/Monad behavior from W0, webhook/delegation schemas plus encryption/redaction from W1, and authenticated pairing from W2. | no for real delegation; yes only for mocked signer interface and wallet-state contract. |
-| W4   | W1, W2             | Review needs shared action/risk/policy schemas from W1 and authenticated MCP/session context from W2.                                                       | yes, if wallet state/delegation is mocked until W3 lands.                               |
-| W5   | W2, W3, W4         | Execution requires authenticated scoped tokens from W2, active delegated signer/wallet from W3, and a valid `review_id` + digest + policy snapshot from W4. | no — this is the critical safety boundary.                                              |
-| W6   | W2, W3, W4, W5     | MCP tools wrap the previous backend capabilities: status/bootstrap from W2, wallet state from W3, review from W4 and execute from W5.                       | yes, tool-by-tool: status after W2, wallet after W3, review after W4, execute after W5. |
-| W7   | W0–W6              | Hardening verifies the full chain, docs, tests, demo script and safety boundaries.                                                                          | no for final readiness; partial docs can evolve earlier.                                |
+### W0 — Upstream + Monad PoC
+
+- **Hard dependencies:** ninguna.
+- **Start gate:** repo con docs actuales y acceso local a `bunx wallet-agent@latest`.
+- **Exit gate:** schemas capturados, Monad Testnet validada, RPC elegido, PoC read/simulate documentado y blockers registrados.
+- **Unlocks hard:** W2 final registry, W5 real Monad action coverage.
+- **Unlocks soft:** W1 real upstream integration, W3 gas/RPC policy tuning, W4 real simulation behavior.
+
+### W1 — MCP proxy skeleton + upstream adapter
+
+- **Hard dependencies:** ninguna para skeleton con upstream mock.
+- **Soft dependencies:** W0 para reemplazar mock por Wallet Agent real.
+- **Start gate:** definición de `compass-proxy` y MCP stdio transport.
+- **Exit gate:** host se conecta a Compass; Compass puede llamar `tools/list` en mock/upstream; no expone tools sin registry.
+- **Unlocks hard:** W4 guarded forward pipeline.
+- **Can start early:** sí, siempre que use fixtures/mock y no asuma schemas reales.
+
+### W2 — Tool semantics registry
+
+- **Hard dependencies:** W0 schema capture para registry final.
+- **Soft dependencies:** W1 para validar cómo se inyecta el filtro en `tools/list`.
+- **Start gate:** fixture provisional de `tools/list` o salida real de W0.
+- **Exit gate:** registry P0 con `input_schema_hash`, tests de drift y comportamiento unmapped definido.
+- **Unlocks hard:** W3 policy/risk/audit y W4 guarded forwarding.
+- **Can start early:** parcialmente, con entradas marcadas `unstable` hasta W0.
+
+### W3 — Policy, risk and audit foundation
+
+- **Hard dependencies:** W2 shape/classes del registry.
+- **Soft dependencies:** W0 para gas/RPC facts finales.
+- **Start gate:** tool classes y state effects definidos aunque sean provisionales.
+- **Exit gate:** policy `allow|block`, risk checks y audit append-only testeados contra registry fixtures.
+- **Unlocks hard:** W4 guarded forwarding.
+- **Can start early:** sí, si usa fixtures de W2 y luego actualiza límites con W0.
+
+### W4 — Guarded forward pipeline
+
+- **Hard dependencies:** W1 + W2 + W3.
+- **Soft dependencies:** W0 para correr simulación real contra Wallet Agent/Monad.
+- **Start gate:** proxy skeleton, registry P0 y policy/audit disponibles.
+- **Exit gate:** blocked calls no llegan al upstream; allowed calls forwardean exactamente una vez; digest/idempotency/audit funcionan.
+- **Unlocks hard:** W5 Monad action coverage.
+- **Can start early:** solo tests unitarios con upstream mock; no real forwarding hasta W1/W2/W3.
+
+### W5 — Monad action coverage
+
+- **Hard dependencies:** W0 + W4.
+- **Soft dependencies:** ninguna.
+- **Start gate:** Wallet Agent + Monad PoC validado y guarded forwarding operativo.
+- **Exit gate:** P0 tools reales cubiertas: chain management, read-only, simulation, transfer/send, token allowance y typed-data handling.
+- **Unlocks hard:** W6 demo hardening.
+- **Can start early:** no para comportamiento final; solo investigación/fixtures.
+
+### W6 — Demo hardening and release readiness
+
+- **Hard dependencies:** W5.
+- **Soft dependencies:** ninguna.
+- **Start gate:** P0 action coverage funcionando end-to-end.
+- **Exit gate:** demo reproducible desde máquina limpia, tests críticos pasan, audit/no-bypass probado y docs de operación listos.
+- **Unlocks hard:** release/demo readiness.
+- **Can start early:** docs parciales sí; hardening final no.
 
 ## Critical path
 
 ```text
-W0 validations
-  -> W1 contracts/storage
-  -> W2 auth/pairing
-  -> W3 secure delegation registration/wallet state
-  -> W5 execution gateway
-  -> W6 executable MCP demo
-  -> W7 hardening
+W0 facts
+  -> W2 registry
+  -> W3 policy/risk/audit
+  -> W4 guarded forwarding
+  -> W5 P0 actions
+  -> W6 demo hardening
 ```
 
-W4 runs after W1/W2 and can progress in parallel with W3 using mocks. W5 is the join point: it must wait for both W3 and W4.
+W1 corre en paralelo con W0/W2 y se une en W4. W4 es el join point donde proxy plumbing, registry, policy, digest, idempotency y audit se convierten en runtime.
 
-## W0 — External validations
+---
 
-**Goal:** de-risk assumptions that are blockers for P0.
+## W0 — Upstream + Monad PoC
 
-**Deliverables:**
-
-- Confirm `MONAD_CHAIN_ID`, RPC URL behavior, explorer URL and Dynamic Dashboard chain support.
-- Validate Dynamic embedded EVM wallet creation/selection for Monad testnet.
-- Identify the exact frontend SDK/API that exposes delegated access setup.
-- Validate Dynamic delegation webhook signature over raw body and required fields.
-- Validate server-side delegated signing + `viem` broadcast on Monad testnet.
-- Choose local MCP token storage: `~/.compass/credentials.json` with `0600` or keychain.
-- Define canonical digest fields and prove one digest mismatch blocks execution.
-
-**Acceptance:** every constitution section 13 blocker has a PoC result, owner and status. Unknowns become explicit ADR/spec notes before W3/W5 rely on them.
-
-## W1 — Contracts, config, storage
-
-**Goal:** create the stable internal language before wiring flows.
+**Goal:** prove the external assumptions that the proxy depends on.
 
 **Deliverables:**
 
-- Zod/TypeScript schemas for `NormalizedAction`, `RiskAssessment`, `PolicyDecision`, `SimulationResult`, `AuditEvent` and `SafeError`.
-- Chain/config module centered on `MONAD_CHAIN_ID`; no frontend access to non-`NEXT_PUBLIC_` env vars.
-- DB schema/migrations for `mcp_sessions`, `pairing_sessions`, `delegations`, `webhook_events`, `intent_reviews` and `audit_events`.
-- Audit metadata allowlists and redaction helpers.
-- Test harness and fixtures for policy/risk/auth flows.
-
-**Acceptance:** schemas compile, migrations apply, redaction tests pass, and policy/risk fixtures can be reused by later waves.
-
-## W2 — Auth, bootstrap, pairing, setup web
-
-**Goal:** let a local MCP instance pair with a human-authenticated wallet setup without any signing capability in public routes.
-
-**Deliverables:**
-
-- `POST /api/mcp/bootstrap` with `mcp_session_id`, `pairing_code`, `setup_url` and one-time `poll_token` hashing.
-- `GET/POST /api/mcp/bootstrap/[sessionId]` requiring both `mcp_session_id` and `poll_token`.
-- `POST /api/mcp/logout` for token revocation.
-- `POST /api/setup/session` requiring authenticated Dynamic/app session and verified wallet ownership.
-- Minimal setup web page: login, wallet select/create, delegate-access trigger, ready status.
-- Rate limiting, TTLs, origin/CORS restrictions and safe error responses.
-
-**Acceptance:** `mcp_session_id` alone cannot retrieve a token, final token is scoped and stored hashed server-side, consumed polling cannot be reused, and setup/bootstrap routes cannot execute intents.
-
-## W3 — Secure Dynamic delegation registration + wallet state
-
-**Goal:** register delegated signing capability safely, expose wallet readiness, and keep all signing power behind a backend-only boundary. W3 unlocks signer capability for W5, but **does not execute, sign arbitrary payloads, or expose signing through public APIs/MCP tools**.
-
-**Deliverables:**
-
-- Webhook ingestion:
-  - capture the raw request body before JSON parsing;
-  - verify Dynamic signature against the raw body before trusting or persisting event data;
-  - reject invalid signatures with safe errors and no sensitive persistence;
-  - process `wallet.delegation.created` idempotently by `eventId`;
-  - record `webhook_events` as `received | processed | ignored | failed` with sanitized errors only.
-- Pairing match:
-  - match the verified webhook to a pending `pairing_session` by `dynamic_user_id + wallet_id` or `dynamic_user_id + publicKey/wallet_address`;
-  - never activate delegation when the webhook is orphaned, mismatched, expired or already consumed;
-  - never emit the final MCP token unless the matched pairing reaches `ready`.
-- Credential storage:
-  - decrypt delegated materials only after signature verification and successful pairing match;
-  - store delegated wallet API key/key share encrypted at rest using Compass-owned encryption;
-  - associate an initial policy snapshot and `active | revoked | expired` delegation status;
-  - ensure delegated materials never appear in logs, responses, audit metadata or test snapshots.
-- Revocation and expiry:
-  - handle Dynamic revocation events when available, plus an internal revoke operation;
-  - mark delegations `revoked` or `expired` without deleting audit history;
-  - make inactive delegations unusable by the signer adapter.
-- Wallet state:
-  - implement `GET /api/wallet/state` for MCP token or web session;
-  - return only safe fields: wallet address, chain id, balances needed for the demo, delegation status and readiness;
-  - never return secrets, raw webhook payloads, delegated materials or token plaintext.
-- Signer adapter boundary:
-  - provide a backend-only delegated signer adapter for W5;
-  - do not create any public route, MCP tool, CLI command or generic helper that signs arbitrary payloads;
-  - make the adapter require an active delegation and reject `missing | revoked | expired` states.
+- Install and run `bunx wallet-agent@latest` locally.
+- Capture upstream `tools/list` schemas for P0 tools.
+- Compute provisional `input_schema_hash` / `upstream_schema_hash` for each exposed tool.
+- Validate `add_custom_chain` and `switch_chain` for Monad Testnet `10143`.
+- Validate `get_wallet_info`, `get_balance`, `estimate_gas`, `simulate_transaction` or `dry_run_transaction` against Monad Testnet.
+- Validate a minimal testnet `transfer_token` or `send_transaction` path when safe to do so.
+- Validate that `approve_token` with `uint256.max` can be identified before forward.
+- Choose `MONAD_RPC_URL` provider for demo and record rate-limit/gas caveats.
+- Confirm the host MCP config can be kept free of direct Wallet Agent access.
 
 **Acceptance:**
 
-- Invalid webhook signatures persist no delegation and return safe errors.
-- Duplicate `eventId` processing is idempotent.
-- Delegation activates only when verified webhook fields match an existing pending pairing.
-- Orphaned, mismatched, expired or already-consumed webhooks never activate signing capability.
-- Delegated credentials are encrypted at rest and never appear in responses, audit events, logs or snapshots.
-- Revoked or expired delegations cannot be used by the signer adapter.
-- Wallet state reports `active | missing | revoked | expired` accurately.
-- No public API, MCP tool, CLI command or generic helper can call delegated signing directly.
+- `tools/list` schemas are saved as fixtures for registry tests.
+- Monad Testnet chain id `10143` is confirmed at runtime.
+- At least one read-only call and one simulation/dry-run works through Wallet Agent or has a documented fallback.
+- Any missing upstream capability is recorded as a blocker or ADR before W4/W5 depend on it.
 
-## W4 — Guarded review pipeline
+---
 
-**Goal:** implement the canonical safety gate: review before execution.
+## W1 — MCP proxy skeleton + upstream adapter
+
+**Goal:** make Compass act as the MCP server seen by the host and MCP client to the upstream.
 
 **Deliverables:**
 
-- Intent normalization for P0 supported actions: native transfer, ERC20 transfer, ERC20 approval and constrained contract-call intake.
-- EVM transaction build/intake and calldata decoder for known ERC20 patterns plus unknown calls.
-- Simulation/inspection adapter for Monad RPC with explicit unavailable/failed handling.
-- Deterministic risk checks: wrong chain, unexpected value movement, dangerous approvals, unknown contract calls, gas limits, recipient/token policy.
-- Demo policy engine with `allow`, `block`, `requires_policy_change`.
-- `POST /api/intents/review` returning `review_id`, canonical `candidate_tx_digest`, policy snapshot, expiry and review text.
-- Audit events for intent received, reviewed and policy evaluated.
+- `compass-proxy` entrypoint accepting:
+  - `--upstream "bunx wallet-agent@latest"`
+  - `--chain monad-testnet`
+  - `--policy ./policy.monad.json`
+- MCP server over stdio for Claude/Codex/Cursor.
+- Upstream MCP client over stdio.
+- Upstream process lifecycle: start, connect, disconnect, safe shutdown.
+- `tools/list` pass that can fetch upstream tools and hand them to the registry filter.
+- Meta-tools with `compass_` prefix only, for example `compass_status` and `compass_audit_events`.
+- Safe errors for upstream unavailable, invalid upstream response and unsupported transport.
 
-**Acceptance:** tests cover unlimited approval block, wrong chain block, unknown contract block, simulation unavailable behavior, digest generation, policy snapshotting and review expiry.
+**Acceptance:**
 
-## W5 — Execution gateway
+- The host can connect to Compass as an MCP server.
+- Compass can connect to a mocked upstream and to Wallet Agent when W0 is available.
+- No upstream tool is exposed before registry filtering.
+- Wallet Agent is never required in the host MCP config.
 
-**Goal:** sign and broadcast only a reviewed, still-valid, policy-allowed transaction.
+---
 
-**Deliverables:**
+## W2 — Tool semantics registry
 
-- `POST /api/intents/execute` requiring token scope, `review_id` and `idempotency_key`.
-- Recompute/retrieve reviewed transaction and verify digest match before signing.
-- Idempotency lock/result reuse for `(mcp_session_id, idempotency_key)`.
-- Delegated signing through the W3 backend-only signer adapter; no direct route/tool access.
-- Broadcast via Monad RPC and safe handling for failed broadcasts.
-- Audit events for signed, broadcast, blocked and failed outcomes.
-
-**Acceptance:** retrying the same idempotency key cannot sign twice, expired reviews block, digest mismatch blocks, non-`allow` policy blocks, and every terminal path writes sanitized audit.
-
-## W6 — MCP tools and local runtime
-
-**Goal:** expose the P0 demo through Claude Code without giving the agent signing authority.
+**Goal:** define what every exposed upstream function does before runtime.
 
 **Deliverables:**
 
-- Local MCP server with credential bootstrap/polling and local token storage.
-- Tools:
-  - `compass_status`
-  - `get_wallet_state`
-  - `review_intent`
-  - `execute_guarded_intent`
-  - `get_audit_events`
-- Structured outputs aligned with shared schemas.
-- Setup response with `setup_url` and `pairing_code` when local credentials are missing.
-- No raw signing, raw send or generic transaction execution tool.
+- `ToolSemantics` registry with:
+  - `registry_version`;
+  - `upstream="wallet_agent"`;
+  - `tool_name` and `exposed_name`;
+  - `input_schema_hash` and `upstream_schema_hash`;
+  - `tool_class`;
+  - `state_effect`;
+  - `required_fields`;
+  - `required_evidence`;
+  - `requires_simulation`;
+  - `policy_checks`.
+- P0 mappings for:
+  - `add_custom_chain`
+  - `switch_chain`
+  - `get_wallet_info`
+  - `get_balance`
+  - `get_token_balance`
+  - `estimate_gas`
+  - `simulate_transaction`
+  - `dry_run_transaction`
+  - `send_transaction`
+  - `transfer_token`
+  - `approve_token`
+  - `sign_typed_data`
+- Default block/hidden behavior for private-key and unmapped tools.
+- Tests that fail when upstream schema hashes drift.
 
-**Acceptance:** Claude Code can go from `needs_setup` to `ready`, review a low-risk action, execute only by `review_id`, receive a blocked explanation for a dangerous action, and read audit events.
+**Acceptance:**
 
-## W7 — Demo hardening and release readiness
+- Unmapped upstream tools are not exposed or return `UNMAPPED_TOOL` before policy.
+- Schema drift disables the affected tool until the registry is updated.
+- Registry tests prove tool classes and required evidence are deterministic.
 
-**Goal:** make the demo reliable and reviewable.
+---
+
+## W3 — Policy, risk and audit foundation
+
+**Goal:** create deterministic safety decisions before any forwarding with side effects.
 
 **Deliverables:**
 
-- Endpoint auth matrix tests for route/scopes positive and negative cases.
-- Audit redaction tests for all event types.
-- Smoke/e2e demo script for setup → review → execute → audit.
-- Seed demo policy, demo recipient/token config and reset instructions.
-- Operator runbook for environment, Dynamic dashboard setup and Monad RPC setup.
-- Known limitations doc for product-spec items deferred beyond P0.
+- `DemoPolicy` JSON schema with:
+  - `chain_id=10143`;
+  - `allowed_tools`;
+  - `allowed_recipients`;
+  - `allowed_tokens`;
+  - exact `allowed_spenders` for token allowances;
+  - gas and amount caps;
+  - `block_unlimited_token_approvals=true`;
+  - `allow_unknown_tools=false`.
+- Policy engine returning only `allow|block`.
+- Risk checks for:
+  - wrong chain;
+  - missing required evidence;
+  - unsafe ERC20 allowances;
+  - unknown/unmapped tools;
+  - simulation unavailable/failed;
+  - gas over policy;
+  - recipient/token not allowlisted.
+- `SafeError` model with no secret leakage.
+- Local append-only audit writer with redaction allowlists.
+- Audit events for proxy start, upstream connect, tools-list filtering, semantics resolved, policy evaluated, forward, block and upstream error.
 
-**Acceptance:** the full P0 demo can be run from a clean machine without exposing secrets, all critical tests pass, and reviewers can verify the safety boundary without reconstructing the architecture.
+**Acceptance:**
+
+- Policy tests cover all `allow|block` branches.
+- Unlimited token allowance always blocks.
+- Unknown tools never reach policy.
+- Audit redaction tests prove no secrets/raw sensitive payloads are persisted.
+
+---
+
+## W4 — Guarded forward pipeline
+
+**Goal:** implement the actual proxy gate for `tools/call`.
+
+**Deliverables:**
+
+- `callInterceptor` implementing:
+  ```text
+  registry -> required evidence -> simulation/inspection -> risk -> policy -> allow/block -> audit
+  ```
+- Required-field validation from `ToolSemantics`.
+- Simulation/dry-run orchestration for write/signature/token-approval classes.
+- `GuardedForwardRecord` with:
+  - `forward_id`;
+  - `audit_event_id`;
+  - `candidate_tx_digest` when applicable;
+  - `covered_fields`;
+  - `idempotency_key` for broadcast/execution;
+  - policy/risk/simulation snapshots.
+- Canonical digest builder covering chain, account, target, value, data, tool name, normalized args, token/spender/amount and relevant gas/fee fields.
+- Forward path that sends the original `tools/call` to Wallet Agent only after `allow`.
+- Block path that never calls upstream and returns a safe explanation.
+- Idempotency store/result reuse for any broadcast/execution tool.
+
+**Acceptance:**
+
+- Blocked calls are proven not to reach the upstream mock.
+- Allowed calls forward exactly one upstream `tools/call`.
+- Digest mismatch blocks or forces re-simulation/re-evaluation.
+- Same `idempotency_key` cannot execute twice.
+- Every terminal path writes sanitized audit.
+
+---
+
+## W5 — Monad action coverage
+
+**Goal:** cover the P0 Wallet Agent tools safely on Monad Testnet.
+
+**Deliverables:**
+
+- Chain management:
+  - `add_custom_chain` allows only Monad Testnet config;
+  - `switch_chain` allows only `10143`.
+- Read-only calls:
+  - `get_wallet_info`;
+  - `get_balance`;
+  - `get_token_balance`.
+- Simulation calls:
+  - `estimate_gas`;
+  - `simulate_transaction`;
+  - `dry_run_transaction`.
+- Transaction execution calls:
+  - `transfer_token` and/or `send_transaction` with simulation, digest, policy and idempotency.
+- Token allowances:
+  - unlimited `approve_token` blocks before upstream;
+  - finite `approve_token` allows only exact `token + spender + amount + chain` policy match.
+- Signature handling:
+  - opaque signatures block;
+  - `sign_typed_data` only allows mapped typed data with expected domain/chain/verifyingContract/primaryType.
+- Monad RPC behavior handling for async send validation, no pending tx lookup, provisional `latest`, gas estimation caveats and provider limits.
+
+**Acceptance:**
+
+- Claude can use Compass to perform read-only calls without direct Wallet Agent access.
+- A safe Monad Testnet action forwards only after registry/evidence/simulation/policy pass.
+- Dangerous allowance and private-key/key-management tools are blocked before upstream.
+- Audit includes decision, digest when applicable, policy snapshot and upstream result/error.
+
+---
+
+## W6 — Demo hardening and release readiness
+
+**Goal:** make the demo reproducible, safe and reviewable.
+
+**Deliverables:**
+
+- Demo policy file and chain config examples.
+- Host setup instructions showing Compass only, no direct Wallet Agent MCP.
+- End-to-end smoke script:
+  - start Compass;
+  - connect Wallet Agent upstream;
+  - configure Monad Testnet;
+  - read wallet state/balance;
+  - simulate/dry-run;
+  - forward safe action;
+  - block dangerous allowance;
+  - inspect audit.
+- Tests for registry, policy, blocked upstream calls, digest, idempotency and audit redaction.
+- Runbook for Monad RPC provider choice and known RPC caveats.
+- Known limitations and ADR list for anything not validated.
+
+**Acceptance:**
+
+- Demo runs from a clean machine using only Compass in the host MCP config.
+- Critical tests pass.
+- Reviewers can verify the proxy boundary without reading product history.
+- No secrets are read, logged, exported or committed.
+
+---
 
 ## Parallelization guidance
 
-- W0 should start first and feeds risk decisions into W3/W5.
-- W1 can begin with provisional Monad config, but W3/W5 must not ship until W0 validates real signing/broadcast.
-- W2 and parts of W4 can proceed in parallel after W1, because review can be built with signer mocked.
-- W5 should stay single-threaded: it crosses auth, policy, signing, idempotency and audit.
-- W6 can expose `compass_status` and `get_wallet_state` early, but `execute_guarded_intent` waits for W5.
+- W0 starts first and produces real upstream facts.
+- W1 can start immediately with mocked upstream.
+- W2 can start with provisional entries, but final hashes wait for W0.
+- W3 can start once W2 shape exists.
+- W4 should stay single-threaded because it joins proxy, registry, policy, digest, idempotency and audit.
+- W5 should be narrow and evidence-driven; each tool class can be validated independently after W4.
+- W6 is final hardening, not a place to introduce new architecture.
 
-## Explicitly deferred from P0
+## Explicitly out of P0
 
-These remain valid product directions, but are not part of the Compass Monad P0 wave chain:
+No construir en esta wave chain:
 
-- Full portfolio/dashboard web app.
-- Full CLI product beyond debug/fallback needs.
-- Solana execution path.
-- Manual wallet popup approval per transaction.
-- Multi-chain support.
-- Teams, roles, policy marketplace and pricing work.
-- External threat-intelligence integrations.
-- LLM-based security decisions as authority.
+- UI/dashboard de aprobación.
+- Firma manual del usuario por transacción.
+- Auth web/CLI externo.
+- Rutas legacy de auth/firma delegada fuera del proxy.
+- Rutas legacy de otras chains.
+- Mainnet.
+- Multi-chain real.
+- x402 productivo.
+- Threat intelligence externa.
+- LLM como autoridad de seguridad.
+- Wallet Agent directo en el host MCP.
 
 ## Recommended first implementation order
 
-1. Run W0 PoCs and record outcomes.
-2. Land W1 schemas/config/storage with tests.
-3. Build W2 bootstrap/pairing and minimal setup web.
-4. Build W4 review pipeline against mocked signer/wallet state.
-5. Build W3 secure Dynamic delegation registration and wallet state.
-6. Build W5 execution gateway.
-7. Wire W6 MCP end-to-end.
-8. Finish W7 hardening/demo docs.
+1. W0: correr PoC Wallet Agent + Monad y guardar schemas.
+2. W1: crear proxy MCP server/client con upstream mock.
+3. W2: implementar registry con hashes y tests de drift.
+4. W3: implementar policy/risk/audit base.
+5. W4: implementar guarded forwarding con digest e idempotencia.
+6. W5: cubrir tools P0 reales contra Wallet Agent + Monad Testnet.
+7. W6: endurecer demo, docs, tests y no-bypass proof.
+
+## Fuentes oficiales usadas
+
+- Monad docs index: `https://docs.monad.xyz/llms.txt`
+- Monad MCP guide: `https://docs.monad.xyz/guides/monad-mcp.md`
+- Monad Testnet info: `https://docs.monad.xyz/developer-essentials/testnets.md`
+- Monad JSON-RPC overview: `https://docs.monad.xyz/reference/json-rpc/overview.md`
+- Repo source of truth: `docs/constitution.md`
+- Product input: `compass_product_spec_monad_mcp_proxy_v0.2.md`
