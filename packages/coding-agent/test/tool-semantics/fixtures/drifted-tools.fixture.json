@@ -1,0 +1,12 @@
+{
+  "source": "synthetic W2 fixture; no secrets",
+  "tools": [
+    {
+      "name": "get_balance",
+      "input_schema_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "send_transaction"
+    }
+  ]
+}

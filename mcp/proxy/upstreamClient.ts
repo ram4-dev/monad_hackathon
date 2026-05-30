@@ -11,7 +11,9 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { parseCommand, buildUpstreamEnv } from "../../back/services/adapters/walletAgent.ts";
+import { withInputSchemaHash } from "./toolSemanticsBridge.ts";
 import type { ProxyConfig, UpstreamState } from "../../shared/types/index.ts";
+import type { UpstreamToolDescriptor } from "./toolSemanticsBridge.ts";
 
 const STDERR_BUFFER_LIMIT = 16 * 1024;
 
@@ -37,6 +39,7 @@ export class UpstreamClient {
   private client: Client | null = null;
   private transport: Transport | null = null;
   private toolNames: string[] = [];
+  private toolDescriptors: UpstreamToolDescriptor[] = [];
   private stderrBuffer = "";
   private state: UpstreamState;
 
@@ -67,6 +70,16 @@ export class UpstreamClient {
     return [...this.toolNames];
   }
 
+  /** Full upstream tools/list descriptors with deterministic W2 input_schema_hash values. */
+  getUpstreamToolDescriptors(): UpstreamToolDescriptor[] {
+    return this.toolDescriptors.map((descriptor) => ({ ...descriptor }));
+  }
+
+  getUpstreamToolDescriptor(name: string): UpstreamToolDescriptor | undefined {
+    const descriptor = this.toolDescriptors.find((tool) => tool.name === name);
+    return descriptor ? { ...descriptor } : undefined;
+  }
+
   /**
    * Start the upstream process and complete the MCP handshake + tools/list. Never throws;
    * on failure it records a safe reason and leaves the proxy able to serve meta-tools.
@@ -91,7 +104,14 @@ export class UpstreamClient {
 
       const serverInfo = client.getServerVersion();
       const tools = await this.withTimeout(client.listTools(), this.config.connectTimeoutMs, "list");
-      this.toolNames = tools.tools.map((t) => t.name);
+      this.toolDescriptors = tools.tools.map((tool) =>
+        withInputSchemaHash({
+          name: tool.name,
+          description: tool.description,
+          inputSchema: tool.inputSchema as Record<string, unknown> | undefined,
+        }),
+      );
+      this.toolNames = this.toolDescriptors.map((tool) => tool.name);
 
       this.state = {
         connected: true,

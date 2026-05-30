@@ -1,0 +1,29 @@
+{
+  "source": "synthetic W2 fixture; names only; no secrets",
+  "tools": [
+    {
+      "name": "import_private_key"
+    },
+    {
+      "name": "create_encrypted_keystore"
+    },
+    {
+      "name": "unlock_keystore"
+    },
+    {
+      "name": "import_encrypted_private_key"
+    },
+    {
+      "name": "remove_private_key"
+    },
+    {
+      "name": "write_contract"
+    },
+    {
+      "name": "unknown_read_helper"
+    },
+    {
+      "name": "dry_run_transaction"
+    }
+  ]
+}

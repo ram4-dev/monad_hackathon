@@ -25,6 +25,10 @@ export function makeSafeError(code: SafeErrorCode, message: string, debugRef?: s
 export function sanitizeToSafeError(code: SafeErrorCode, debugRef?: string): SafeError {
   const messages: Record<SafeErrorCode, string> = {
     UNMAPPED_TOOL: "This tool is not exposed by Compass.",
+    UNSUPPORTED_TOOL: "This tool is not supported by Compass.",
+    PRIVATE_KEY_MANAGEMENT_BLOCKED: "Private-key and keystore management tools are blocked by Compass.",
+    DANGEROUS_TOOL_BLOCKED: "This tool is blocked by Compass before policy evaluation.",
+    SCHEMA_DRIFT: "This tool schema no longer matches the reviewed Compass registry.",
     UPSTREAM_UNAVAILABLE: "The upstream is not available.",
     UPSTREAM_ERROR: "The upstream returned an error.",
     MISSING_REQUIRED_EVIDENCE: "The request is missing required fields.",

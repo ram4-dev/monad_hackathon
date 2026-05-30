@@ -4,15 +4,15 @@
  * Full W4 ordering (constitution §6):
  *   registry -> required evidence -> simulation/inspection -> risk -> policy -> allow/block -> audit
  *
- * W1 implements ONLY:
- *   shape validation -> classify (meta | provisional read-only allowlist | block) -> forward|block -> audit
+ * W1+W2 implements ONLY:
+ *   shape validation -> registry/schema resolution -> default decision -> forward|block -> audit
  *
  * The intermediate W4 stages are deliberately NOT implemented here. They are the documented
- * extension point for W4; no policy/risk/digest/simulation decision is silently made in W1.
+ * extension point for W4; no policy/risk/digest/simulation decision is silently made in W1+W2.
  */
 
 import { randomUUID } from "node:crypto";
-import { classifyTool } from "../../back/services/adapters/walletAgent.ts";
+import { resolveToolForCall } from "./toolSemanticsBridge.ts";
 import { ToolCallArgsSchema, makeSafeError, sanitizeToSafeError } from "./schemas.ts";
 import { UpstreamClient } from "./upstreamClient.ts";
 import type { AuditLog } from "../../back/services/audit/auditLog.ts";
@@ -47,22 +47,26 @@ export class CallInterceptor {
     }
     const args = parsed.data as Record<string, unknown>;
 
-    const classification = classifyTool(toolName);
-    if (classification.kind === "meta") {
+    if (toolName === "compass_status" || toolName === "compass_audit_events") {
       return { outcome: { kind: "meta", toolName }, args };
     }
-    if (classification.kind === "forward") {
-      return { outcome: { kind: "forward", toolName, toolClass: classification.toolClass }, args };
+
+    const resolution = resolveToolForCall(toolName, this.upstream.getUpstreamToolDescriptor(toolName), this.upstream.isConnected());
+    if (resolution.status !== "visible") {
+      return {
+        outcome: { kind: "block", toolName, error: sanitizeToSafeError(resolution.safe_reason_code) },
+        args,
+      };
     }
-    // block
-    const error =
-      classification.reason === "unmapped"
-        ? sanitizeToSafeError("UNMAPPED_TOOL")
-        : sanitizeToSafeError("POLICY_BLOCKED");
-    return {
-      outcome: { kind: "block", toolName, error },
-      args,
-    };
+
+    if (resolution.semantics.default_decision !== "allow") {
+      return {
+        outcome: { kind: "block", toolName, error: sanitizeToSafeError("POLICY_BLOCKED") },
+        args,
+      };
+    }
+
+    return { outcome: { kind: "forward", toolName, toolClass: resolution.semantics.tool_class }, args };
   }
 
   /**
