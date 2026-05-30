@@ -42,6 +42,7 @@ export class UpstreamClient {
   private toolDescriptors: UpstreamToolDescriptor[] = [];
   private stderrBuffer = "";
   private state: UpstreamState;
+  private chainReady = false;
 
   constructor(config: ProxyConfig, transportFactory: UpstreamTransportFactory = defaultStdioTransportFactory) {
     this.config = config;
@@ -122,6 +123,12 @@ export class UpstreamClient {
         upstreamToolCount: this.toolNames.length,
         reason: null,
       };
+
+      // Internal init: bootstrap Monad Testnet on the upstream so it is on-chain from the start.
+      // This is a fixed, Monad-only setup step owned by Compass (not a host call, not LLM-decided),
+      // so the host never needs chain-management tools and reads work immediately. Best-effort:
+      // failure here does not break the connection (reads will surface UPSTREAM_ERROR if needed).
+      await this.bootstrapMonadChain();
     } catch (err) {
       this.state = {
         ...this.state,
@@ -142,6 +149,45 @@ export class UpstreamClient {
     return this.client.callTool({ name, arguments: args }, undefined, {
       timeout: this.config.callTimeoutMs,
     });
+  }
+
+  /** Whether the upstream was successfully bootstrapped onto Monad Testnet. */
+  isChainReady(): boolean {
+    return this.chainReady;
+  }
+
+  /**
+   * Configure Monad Testnet on the upstream once at connect time (add_custom_chain + switch_chain).
+   * Fixed config (chain 10143, MON, MONAD_RPC_URL). Best-effort and idempotent: wallet-agent
+   * tolerates re-adding; any failure is swallowed (chain reads will fail closed downstream).
+   */
+  private async bootstrapMonadChain(): Promise<void> {
+    if (!this.client) return;
+    const rpcUrl = process.env.MONAD_RPC_URL || "https://testnet-rpc.monad.xyz";
+    try {
+      await this.client.callTool(
+        {
+          name: "add_custom_chain",
+          arguments: {
+            chainId: 10143,
+            name: "Monad Testnet",
+            rpcUrl,
+            nativeCurrency: { name: "Monad", symbol: "MON", decimals: 18 },
+          },
+        },
+        undefined,
+        { timeout: this.config.callTimeoutMs },
+      );
+      await this.client.callTool(
+        { name: "switch_chain", arguments: { chainId: 10143 } },
+        undefined,
+        { timeout: this.config.callTimeoutMs },
+      );
+      this.chainReady = true;
+    } catch {
+      // Best-effort: leave chainReady false; downstream reads fail closed with a safe error.
+      this.chainReady = false;
+    }
   }
 
   /** Graceful shutdown: closing the transport closes child stdin and terminates the process. */
