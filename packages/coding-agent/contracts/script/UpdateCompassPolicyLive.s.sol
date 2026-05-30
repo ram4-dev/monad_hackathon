@@ -40,16 +40,17 @@ contract UpdateCompassPolicyLive {
         CompassPolicy.PolicyFlags memory flags = CompassPolicy.PolicyFlags(true, false, true, false);
 
         bool finiteDemo = token != address(0);
-        uint256 toolCount = finiteDemo ? 7 : 5;
+        uint256 toolCount = finiteDemo ? 8 : 6;
         bytes32[] memory tools = new bytes32[](toolCount);
         tools[0] = keccak256("get_balance");
         tools[1] = keccak256("get_wallet_info");
         tools[2] = keccak256("get_token_balance");
         tools[3] = keccak256("add_custom_chain");
         tools[4] = keccak256("switch_chain");
+        tools[5] = keccak256("send_transaction");
         if (finiteDemo) {
-            tools[5] = keccak256("transfer_token");
-            tools[6] = keccak256("approve_token");
+            tools[6] = keccak256("transfer_token");
+            tools[7] = keccak256("approve_token");
         }
 
         address[] memory recipients;

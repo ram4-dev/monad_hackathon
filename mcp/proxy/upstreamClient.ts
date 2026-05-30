@@ -43,6 +43,7 @@ export class UpstreamClient {
   private stderrBuffer = "";
   private state: UpstreamState;
   private chainReady = false;
+  private signerProvisioned = false;
 
   constructor(config: ProxyConfig, transportFactory: UpstreamTransportFactory = defaultStdioTransportFactory) {
     this.config = config;
@@ -156,6 +157,11 @@ export class UpstreamClient {
     return this.chainReady;
   }
 
+  /** Whether the executor was provisioned with the operator signing key. */
+  isSignerProvisioned(): boolean {
+    return this.signerProvisioned;
+  }
+
   /**
    * Configure Monad Testnet on the upstream once at connect time (add_custom_chain + switch_chain).
    * Fixed config (chain 10143, MON, MONAD_RPC_URL). Best-effort and idempotent: wallet-agent
@@ -164,6 +170,12 @@ export class UpstreamClient {
   private async bootstrapMonadChain(): Promise<void> {
     if (!this.client) return;
     const rpcUrl = process.env.MONAD_RPC_URL || "https://testnet-rpc.monad.xyz";
+
+    // If the operator provisioned a signing key into the upstream env (WALLET_PRIVATE_KEY), switch
+    // the executor to that account by env-var NAME (never the value). This is internal operator
+    // provisioning of the wallet executor, not a host/LLM key import.
+    // Chain setup FIRST. NOTE: add_custom_chain/switch_chain reset the wallet to "mock" type, so
+    // the signer import MUST happen AFTER the chain is configured (otherwise it gets reset).
     try {
       await this.client.callTool(
         {
@@ -187,6 +199,20 @@ export class UpstreamClient {
     } catch {
       // Best-effort: leave chainReady false; downstream reads fail closed with a safe error.
       this.chainReady = false;
+    }
+
+    // Signer LAST so the chain ops do not reset it. Imports the operator key by env-var NAME
+    // (never value), then selects the privateKey wallet so the executor signs from the funded
+    // account. Internal operator provisioning; never a host/LLM action.
+    const hasSigner = !!(process.env.COMPASS_UPSTREAM_SIGNER_KEY || process.env.MONAD_DEPLOYER_PRIVATE_KEY);
+    if (hasSigner) {
+      try {
+        await this.client.callTool({ name: "import_private_key", arguments: { privateKey: "WALLET_PRIVATE_KEY" } }, undefined, { timeout: this.config.callTimeoutMs });
+        await this.client.callTool({ name: "set_wallet_type", arguments: { type: "privateKey" } }, undefined, { timeout: this.config.callTimeoutMs });
+        this.signerProvisioned = true;
+      } catch {
+        this.signerProvisioned = false;
+      }
     }
   }
 

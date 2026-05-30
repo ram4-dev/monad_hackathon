@@ -46,6 +46,16 @@ export function buildUpstreamEnv(parentEnv: Record<string, string | undefined>):
   // Resolve W0-BLOCKER-001: ensure the upstream resolves from the public registry unless the
   // operator already set it explicitly.
   env.npm_config_registry = parentEnv.npm_config_registry ?? DEFAULTS.npmRegistry;
+
+  // Operator provisioning of the executor's signing key. The Wallet Agent is the wallet executor
+  // and is meant to hold a key; this passes the key into the UPSTREAM process env only (under the
+  // name Wallet Agent reads, WALLET_PRIVATE_KEY). The key value never reaches the host/LLM, Compass
+  // audit, or tool arguments — bootstrap imports it by env-var NAME, not value. Without it the
+  // upstream stays on its mock accounts (read-only demo).
+  const signer = parentEnv.COMPASS_UPSTREAM_SIGNER_KEY ?? parentEnv.MONAD_DEPLOYER_PRIVATE_KEY;
+  if (typeof signer === "string" && signer.length > 0) {
+    env.WALLET_PRIVATE_KEY = signer;
+  }
   return env;
 }
 

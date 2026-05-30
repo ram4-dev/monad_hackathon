@@ -79,6 +79,17 @@ const actionCoverageModule = require("../../packages/coding-agent/src/action-cov
 const policySourceModule = require("../../packages/coding-agent/src/policy-source/index.js") as {
   createPolicySourceConfig: (input?: unknown, opts?: unknown) => { ok: boolean; config?: unknown; error?: unknown };
 };
+const monadRpcModule = require("../../packages/coding-agent/src/monad-rpc/index.js") as {
+  createJsonRpcTransport: (opts: { rpcUrl: string }) => { request: (r: { method: string; params?: unknown[] }) => Promise<unknown> };
+  buildSimulationEvidence: (params: {
+    transport: { request: Function };
+    tx: { from?: string; to?: string; value?: string; data?: string };
+    fee?: { maxFeePerGasWei?: string | bigint };
+  }) => Promise<{ simulation: { status: string }; estimated_gas_cost_wei?: string; gas_limit?: string }>;
+};
+
+export const createJsonRpcTransport = monadRpcModule.createJsonRpcTransport;
+export const buildSimulationEvidence = monadRpcModule.buildSimulationEvidence;
 
 /** Run the W4 guarded-forward pipeline for one host tools/call. */
 export function guardedForward(params: GuardedForwardParams): Promise<GuardedForwardResult> {
