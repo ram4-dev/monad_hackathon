@@ -1,0 +1,19 @@
+.gitignore
+  s_a3aa6609dd0b2b::t_944feee01bd345 1-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "633bb1d8b87b86b08904bcb96bfd9023626ece81",
+  "prompts": {},
+  "sessions": {
+    "s_a3aa6609dd0b2b": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019e76ae-c378-718e-8da1-7a833bccb923",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ramiro <ramiro.carnicer@mercadolibre.com>"
+    }
+  }
+}
