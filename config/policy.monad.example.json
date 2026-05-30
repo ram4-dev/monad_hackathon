@@ -1,0 +1,11 @@
+{
+  "_comment": "Placeholder policy file. W1 does NOT evaluate policy; this is consumed for real by W3 (DemoPolicy schema, constitution §6). Present here only so the --policy flag has an example target.",
+  "policy_version": "0.0.0-w1-placeholder",
+  "chain_id": 10143,
+  "allowed_tools": [],
+  "allowed_recipients": [],
+  "allowed_tokens": [],
+  "allowed_spenders": [],
+  "block_unlimited_token_approvals": true,
+  "allow_unknown_tools": false
+}

@@ -9,13 +9,14 @@ sdd:
   review_budget_lines: null # User selected no fixed cap; still warn on multi-area/high-risk diffs.
 
 strict_tdd: false
-test_runner: null
+test_runner: bun
 testing:
-  command: null
-  status: not_configured
+  command: bun test
+  typecheck_command: bun run typecheck
+  status: configured
   notes:
-    - Repo is currently planning/docs-only; no package manager manifest or runnable test command was detected at SDD init time.
-    - Use evidence-based W0 verification for external PoC steps and enable strict_tdd once implementation scaffolding and a test runner exist.
+    - W1 introduced the first runnable Bun + TypeScript scaffolding and test suite.
+    - strict_tdd remains false for now; it is evaluable from W1 onward and may be enabled in a later wave.
 
 sources_of_truth:
   - docs/constitution.md
