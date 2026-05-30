@@ -1,0 +1,12 @@
+Compiling 2 files with Solc 0.8.24
+Solc 0.8.24 finished in 4.89s
+Compiler run successful!
+
+Ran 4 tests for test/CompassPolicy.t.sol:CompassPolicyTest
+[PASS] testConstructorIdentityAndGetters() (gas: 2486302)
+[PASS] testFreezeAndOwnershipTransferEmitEvents() (gas: 2498975)
+[PASS] testOwnerUpdateIncrementsVersionAndPagination() (gas: 2373351)
+[PASS] testValidationRejectsDuplicatesZeroAndUnsafeFlags() (gas: 489255)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 11.63ms (15.95ms CPU time)
+
+Ran 1 test suite in 18.60ms (11.63ms CPU time): 4 tests passed, 0 failed, 0 skipped (4 total tests)

@@ -1,0 +1,50 @@
+npm warn Unknown user config "always-auth". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> @compass/coding-agent@0.0.0-wave2 test
+> node --test test/**/*.test.js
+
+✔ policy source audit action keeps only allowlisted metadata (6.725667ms)
+✔ policy update audit preserves public identifiers and excludes secrets (0.133708ms)
+✔ audit writer appends JSONL events in order (6.326125ms)
+✔ audit metadata is allowlisted and redacted before persistence (2.66875ms)
+✔ mocked read-only ABI client fetches paginated policy snapshot without wallet/signer (4.205208ms)
+✔ wrong chain, empty code, RPC error, and ABI decode failure fail closed (2.805709ms)
+✔ valid on-chain policy snapshot normalizes decimal strings and addresses (2.117458ms)
+✔ invalid flags, duplicates, and over-bound lists fail closed (0.742083ms)
+✔ frozen policy returns POLICY_FROZEN (0.077375ms)
+✔ unsupported versions fail closed (0.067667ms)
+✔ explicit valid policy source config binds Monad Testnet address without hardcoded RPC default (0.851292ms)
+✔ missing and malformed binding fails closed with safe code (1.040459ms)
+✔ default schema id matches Solidity EXPECTED_SCHEMA_ID (0.053ms)
+✔ environment source order redacts configured RPC values from errors (0.177958ms)
+✔ W2 pre-policy blocks are preserved and not rescued by on-chain allowlists (2.915709ms)
+✔ read-only registered tool can allow when W2, on-chain policy, chain evidence, and audit pass (1.443375ms)
+✔ missing policy source and non-allowlisted tool fail closed (1.486ms)
+✔ write-like branches block missing simulation, unlimited approvals, and over-cap amount/gas (1.945084ms)
+✔ tool keys are deterministic Ethereum keccak256 hashes of UTF-8 names (5.610208ms)
+✔ policy-source failures produce critical blocking findings (0.778584ms)
+✔ same W2/policy/evidence inputs produce stable risk output (2.291417ms)
+✔ wrong chain, missing evidence, and non-allowlisted entities block (1.767125ms)
+✔ unlimited approval and failed simulation block deterministically (0.63975ms)
+✔ policy-source errors are stable and sanitized (1.006125ms)
+✔ redaction excludes rpc urls, private keys, env-looking tokens, and unredacted args (0.19325ms)
+✔ generic redactValue still redacts 32-byte hex strings (0.102208ms)
+✔ registry maps exactly the 11 W0-captured P0 tools with exact hashes (1.452917ms)
+✔ write-like tools default block and require downstream evidence before forwarding (0.099916ms)
+✔ read and simulation tools keep no state-effect semantics and do not imply forwarding (0.128459ms)
+✔ chain management entries default block until allowlist evidence exists downstream (0.055709ms)
+✔ dry_run_transaction is unsupported with W0-BLOCKER-009 and no fake hashes (0.062584ms)
+✔ known W0 captured tools resolve visible only when schema-compatible (1.055792ms)
+✔ schema drift and missing hashes disable captured tools before policy (0.082458ms)
+✔ private-key and keystore tools are blocked before policy (0.061666ms)
+✔ dangerous and unmapped tools return safe block reason codes (0.050042ms)
+✔ dry_run_transaction resolves unsupported before policy with blocker metadata (0.65075ms)
+✔ filterVisibleTools returns only registered schema-compatible tools (0.128333ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 251.741417

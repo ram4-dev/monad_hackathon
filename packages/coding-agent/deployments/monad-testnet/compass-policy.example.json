@@ -1,0 +1,59 @@
+{
+  "schema": "compass.policy.deployment.v1",
+  "change_id": "wave-3-policy-risk-audit-foundation",
+  "network": {
+    "name": "Monad Testnet",
+    "chain_id": 10143,
+    "native_currency_symbol": "MON",
+    "docs": ["https://docs.monad.xyz/developer-essentials/testnets.md"],
+    "testnet_reset_caveat_acknowledged": true
+  },
+  "contract": {
+    "name": "CompassPolicy",
+    "address": "0x0000000000000000000000000000000000000000",
+    "abi_sha256": "sha256:<abi-hash>",
+    "source_sha256": "sha256:<source-hash>",
+    "schema_id": "0x<keccak256-compass-policy-v1>",
+    "policy_id": "0x<policy-id>",
+    "policy_version": "1",
+    "content_hash": "0x<approved-manifest-hash>",
+    "owner_address": "0x0000000000000000000000000000000000000000"
+  },
+  "deployment": {
+    "tool": "foundry",
+    "foundry_profile": "monad-testnet",
+    "deployer_address": "0x0000000000000000000000000000000000000000",
+    "tx_hash": "0x<tx-hash>",
+    "block_number": "<block-number>",
+    "timestamp_utc": "YYYY-MM-DDTHH:MM:SSZ",
+    "gas_limit": "<gas-limit>",
+    "gas_used": "<gas-used>",
+    "commands_redacted": true
+  },
+  "verification": {
+    "status": "not_available",
+    "explorer_name": "Monad Testnet explorer",
+    "contract_url": "https://<explorer>/address/<address>",
+    "verification_reference": "<verification-reference>"
+  },
+  "post_deploy_reads": {
+    "eth_chainId": "0x279f",
+    "policyIdentity_ok": true,
+    "schema_ok": true,
+    "version_ok": true,
+    "flags_ok": true
+  },
+  "safety": {
+    "secret_material_logged": false,
+    "private_key_logged": false,
+    "keystore_contents_logged": false,
+    "used_keystore_or_secure_account_flow": true
+  },
+  "docs_refs": [
+    "https://docs.monad.xyz/llms.txt",
+    "https://docs.monad.xyz/developer-essentials/testnets.md",
+    "https://docs.monad.xyz/guides/deploy-smart-contract/foundry.md",
+    "https://docs.monad.xyz/developer-essentials/differences.md"
+  ],
+  "status": "example_only_not_deployed"
+}
