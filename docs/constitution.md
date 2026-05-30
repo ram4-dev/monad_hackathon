@@ -1,39 +1,41 @@
 # Compass Monad — Constitución del Repo
 
-**Estado:** v0.4 — fuente de verdad inicial endurecida  
-**Fecha:** 2026-05-29  
+**Estado:** v0.6 — P0 proxy-only, sin aprobaciones externas ni legado fuera de alcance  
+**Fecha:** 2026-05-30  
 **Owner:** maintainers del repo  
-**Última validación externa:** pendiente; ver sección 13  
+**Última validación externa:** 2026-05-30; Monad docs oficiales listadas en sección 14  
 **Alcance:** todo el repo `compass_monad`  
-**Producto:** Compass para Monad — safety and authorization layer for AI agents operating wallets
+**Producto:** Compass — MCP security proxy for AI agents executing on Monad
 
-Esta constitución define las reglas que no queremos rediscutir en cada archivo: arquitectura, límites de seguridad, estructura de carpetas, modelos de datos, interfaces y criterios de implementación. Si una decisión futura contradice este documento, primero se actualiza esta constitución o se agrega un ADR/RFC explícito.
+Esta constitución define las decisiones que no queremos rediscutir en cada archivo. Si código, prompts, specs o ADRs contradicen este documento, primero se actualiza esta constitución o se crea un ADR/RFC explícito.
 
 ## Quick read
 
-- **Demo P0:** Claude Code usa Compass mediante MCP; la web solo hace onboarding humano.
-- **Wallet/firma:** Dynamic embedded EVM wallet + backend programmatic signing vía Delegated Access.
-- **Safety boundary:** Claude solicita acciones; Compass revisa, decide, firma y audita.
-- **Nunca:** claves/private keys en Claude, tools raw signing, endpoints públicos de ejecución.
-- **Antes de firmar:** token MCP válido, review vigente, digest de tx matching, policy `allow`, idempotencia y audit.
-- **Bloqueantes P0:** validar chain id Monad, SDK Dynamic, webhook, delegated signing y storage local; ver sección 13.
+- **Demo P0:** Claude Code/Claude Desktop/Codex/Cursor usan **Compass MCP Security Proxy** como única superficie MCP de ejecución.
+- **Arquitectura P0:** Compass corre como MCP server frente al host y como MCP client frente a un upstream MCP.
+- **Upstream inicial:** **Wallet Agent** corre detrás de Compass. El host nunca lo ve directo.
+- **Chain P0:** Monad Testnet, `chain_id=10143`, `MON`, RPC configurable por `MONAD_RPC_URL`.
+- **Sin aprobación humana/manual:** estamos dentro de Claude. No hay superficie visual ni firma manual del usuario por transacción. `approve_token` refiere solo a allowance on-chain.
+- **Decisión runtime:** una tool call es `allow` o `block`. Si no cumple policy, no se forwardea.
+- **Semántica pre-mapeada:** Compass no decide por nombre de tool ni por confianza heurística. Cada función permitida debe existir en un registry previo con efectos, campos requeridos y policy checks.
+- **Nunca:** acceso directo a Wallet Agent, private keys en Claude, key-management tools, raw signing genérico, unknown writes por passthrough, o decisiones críticas basadas solo en LLM.
 
 ---
 
 ## 1. Decisiones fundacionales
 
-| Tema | Decisión |
-| --- | --- |
-| Demo principal | **Claude Code vía MCP**, no web app transaccional. |
-| Chain | **Monad testnet** como target P0. El `chainId` vive en config (`MONAD_CHAIN_ID`). `10143` queda como valor provisional observado en docs de Dynamic hasta validarlo con Monad/Dynamic Dashboard. |
-| Wallet | **Dynamic embedded EVM wallet**. La wallet pertenece al usuario. |
-| Firma | **Backend programmatic signing con Dynamic Delegated Access**, nunca desde Claude directamente. |
-| UX de autorización | El usuario autoriza una delegación inicial; no debe aprobar cada tx con popup de wallet. |
-| Safety boundary | Claude pide acciones; **Compass decide** si se firma/ejecuta. |
-| Tooling principal | MCP server. CLI puede existir solo como debug/fallback. |
-| Auth MCP/backend | El MCP local obtiene un token scoped mediante bootstrap/pairing. El usuario no configura manualmente una API key. |
-| Reuso del repo Solana | Reutilizar patrones, componentes, contratos de API/types y estructura; no portar código Solana-specific como dependencia central. |
-| Producto | Compass no es wallet ni chatbot. Es una capa de autorización segura para agentes. |
+| Tema              | Decisión                                                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Demo principal    | **Compass MCP Security Proxy** instalado como único MCP de ejecución visible para Claude Code/Claude Desktop/Codex/Cursor.                                   |
+| Producto          | Compass es un security proxy para agentes. No implementa una wallet propia, chat cripto, dashboard ni UI de aprobación.                                      |
+| Chain             | **Monad Testnet** P0. `chain_id=10143` confirmado por docs oficiales de Monad.                                                                               |
+| RPC               | Configurable con `MONAD_RPC_URL`. Los RPC públicos oficiales son referencia, no dependencia hardcodeada.                                                     |
+| Upstream          | **Wallet Agent** como primer MCP upstream por sus tools EVM-compatible. Se usa como executor detrás del gate, no como superficie directa.                    |
+| Tool exposure     | Compass expone solo tools pre-mapeadas. Los nombres upstream se mantienen iguales; las meta-tools propias usan prefijo `compass_`.                           |
+| Runtime decision  | `allow` forwardea al upstream. `block` corta la llamada y devuelve explicación segura. No existe aprobación externa interactiva en P0.                       |
+| ERC20 allowances  | `approve_token` limitado puede forwardearse solo si `token + spender + amount + chain` están permitidos explícitamente por policy. Todo lo demás se bloquea. |
+| Bypass            | El host MCP de demo no debe tener Wallet Agent configurado en paralelo. Si Claude ve Wallet Agent directo, Compass queda bypassed.                           |
+| Seguridad crítica | Determinística/reglas verificables primero; el LLM puede explicar, no decidir como autoridad final.                                                          |
 
 ---
 
@@ -41,448 +43,380 @@ Esta constitución define las reglas que no queremos rediscutir en cada archivo:
 
 Estas reglas son no negociables.
 
-1. **Claude nunca recibe claves, key shares, wallet API keys ni private keys.**
-2. **No existe una tool MCP genérica `sign_raw_transaction` o `send_raw_transaction`.**
-3. Toda ejecución pasa por:
+1. Claude nunca recibe private keys, key shares, wallet API keys, delegated payloads ni tokens secretos.
+2. Claude no debe tener acceso directo al upstream MCP. Compass es la única interfaz visible.
+3. Compass no expone tools genéricas de `sign_raw_transaction`, `send_raw_transaction`, private-key import/export o keystore unlock.
+4. No hay aprobación externa, superficie visual ni firma manual del usuario por transacción en P0.
+5. Toda `tools/call` pasa por:
    ```text
-   intent -> normalization -> tx build/intake -> simulation/inspection -> risk -> policy -> signing -> broadcast -> audit
+   input -> registered semantics -> required evidence -> simulation/inspection -> risk -> policy -> allow/block -> audit
    ```
-4. Si Compass no puede explicar razonablemente una acción, debe escalar riesgo o bloquear.
-5. Si la transacción candidata no coincide con lo revisado, no se firma ni se emite.
-6. Dynamic delegated credentials se reciben solo por webhook verificado, se descifran backend-side, se guardan cifradas y nunca se loguean.
-7. El backend firma únicamente bajo una delegación activa, un token MCP válido y una policy vigente.
-8. Endpoints públicos de bootstrap/pairing no pueden firmar, ejecutar ni consultar secrets.
-9. Endpoints HTTP de ejecución requieren autenticación machine-to-machine o ejecución in-process equivalente; nunca quedan públicos sin auth.
-10. Approvals peligrosos (`uint256.max`, `setApprovalForAll`, Permit2 no allowlisted) son bloqueados por default.
-11. Unknown high-value contract calls requieren bloqueo o policy explícita.
-12. Audit trail es parte del producto, no logging accidental.
-13. Toda ejecución debe estar atada a una revisión vigente mediante `review_id` y digest canónico de la transacción candidata.
-14. La idempotencia de ejecución es obligatoria: un retry no puede producir una segunda firma/broadcast para la misma intención.
-15. Errores, audit metadata y logs públicos nunca pueden incluir secrets, key material, raw delegated payloads ni tokens plaintext.
-16. Cambios de policy deben quedar versionados y auditados; la ejecución usa un snapshot de policy, no estado implícito.
+6. Compass solo expone tools que existen en el registry de semántica. Una tool upstream no registrada se oculta o se bloquea.
+7. Read-only puede proxyearse con audit si está registrado como read-only.
+8. Write/signature/token approval nunca se forwardea sin evidencia mínima, simulation/inspection y policy `allow`.
+9. Si Compass no puede inspeccionar lo suficiente para entender el efecto de una acción write, bloquea. No escala a aprobación humana en P0.
+10. Unknown write se bloquea por default.
+11. Private-key/keystore management se bloquea por default, incluso si el upstream lo ofrece.
+12. Allowances ERC20 peligrosas (`uint256.max`, `setApprovalForAll`, Permit2 no allowlisted, spender/token desconocido) se bloquean por default.
+13. Signatures opacas se bloquean; `sign_typed_data` requiere decoding semántico y policy explícita.
+14. Chain management (`add_custom_chain`, `switch_chain`) solo se permite para Monad Testnet allowlisted (`10143`).
+15. Toda ejecución write debe registrar audit con input sanitizado, semántica usada, decisión, policy snapshot, upstream result/error y audit id.
+16. Logs, audit metadata y errores nunca pueden incluir secrets, private keys, raw payloads sensibles, tokens plaintext ni stack traces sensibles.
+17. Toda llamada que pueda producir una transacción, firma o broadcast debe generar y auditar un `candidate_tx_digest` canónico antes de forwardear.
+18. La ejecución real debe coincidir con el payload/digest revisado o debe re-simularse y re-evaluarse antes de forwardear.
+19. Si una tool puede hacer broadcast/execution, `idempotency_key` o un equivalente determinístico es obligatorio. Un retry no puede producir una segunda ejecución para la misma intención.
+20. Las policies son deny-by-default: permitir es una decisión explícita, auditable y reproducible.
+21. Las diferencias RPC/gas/finality de Monad se tratan como requisitos de diseño, no como edge cases de Ethereum genérico.
+22. Si una doc oficial de Monad contradice este documento, se pausa y se actualiza la constitución o se agrega un ADR antes de implementar.
 
 ---
 
 ## 3. Arquitectura objetivo P0
 
 ```text
-Claude Code
-  |
-  v
-Compass MCP Server local
-  - bootstrap/pairing client
-  - stores scoped MCP token locally
-  |
-  v
-Compass Backend/API
-  - MCP bootstrap/session auth
-  - delegation registry
-  - intent normalization
-  - EVM transaction builder/intake
-  - calldata decoder
-  - simulation/inspection
-  - risk engine
-  - policy engine
-  - audit trail
-  |
-  | 1. request signature for reviewed tx
-  v
-Dynamic Delegated Access
-  |
-  | 2. returns signed raw transaction
-  v
-Compass Backend/API
-  |
-  | 3. broadcasts signed tx
-  v
+Claude Code / Claude Desktop / Codex / Cursor
+        |
+        v
+Compass MCP Security Proxy
+- MCP server frente al host
+- MCP client frente al upstream
+- filtered tools/list from semantics registry
+- tools/call interception
+- required-evidence validation
+- simulation / dry-run / inspection
+- risk + policy decision
+- append-only audit trail
+        |
+        v
+Upstream MCP
+- Wallet Agent first
+        |
+        v
 Monad Testnet RPC
 ```
 
-### 3.1 Web mínima
+### 3.1 Comando objetivo
 
-La web no es la demo principal. Existe para onboarding humano:
-
-1. login con Dynamic;
-2. creación/selección de embedded wallet EVM;
-3. aprobación de delegated access para Compass;
-4. estado “ready for Claude Code”.
-
-La web no debe implementar un dashboard completo, chat productivo ni approval manual por transacción en P0.
-
-### 3.2 MCP como superficie principal
-
-Claude Code interactúa con Compass mediante tools MCP. El MCP server es una interfaz fina: valida inputs, llama al backend/core y devuelve resultados estructurados. No contiene lógica crítica de firma por sí mismo.
-
-### 3.3 Matriz de auth por superficie HTTP
-
-| Superficie | Auth requerida | Puede firmar | Accede a secrets | Notas |
-| --- | --- | --- | --- | --- |
-| `POST /api/mcp/bootstrap` | público + rate limit | no | no | Crea sesión pending y devuelve setup URL/pairing code. |
-| `GET/POST /api/mcp/bootstrap/[sessionId]` | `mcp_session_id + poll_token` | no | no | Polling one-time para retirar token MCP final. |
-| `POST /api/mcp/logout` | token MCP | no | no | Revoca token MCP; no revoca delegación salvo flujo explícito. |
-| `POST /api/setup/session` | sesión web autenticada por Dynamic/app | no | no | Registra pairing con usuario/wallet verificados. |
-| `GET /api/wallet/state` | token MCP o sesión web | no | no | Lectura operativa sin secrets. |
-| `POST /api/intents/review` | token MCP con `intent:review` | no | no directo | Construye/revisa tx candidata y emite `review_id`. |
-| `POST /api/intents/execute` | token MCP con `intent:execute` | sí, si policy allow | signer path aislado | Solo ejecuta un `review_id` vigente + digest matching + idempotency. |
-| `GET /api/audit/events` | token MCP con `audit:read` o sesión web | no | no | Metadata allowlisted y redacted. |
-| `POST /api/dynamic/delegation/webhook` | firma Dynamic sobre raw body | no directo | decrypt path controlado | Idempotente por `eventId`; nunca loguea payload sensible. |
-
-Todas las superficies públicas deben tener rate limit y respuestas seguras. Ninguna ruta de bootstrap, setup o webhook puede ejecutar intents ni firmar transacciones.
-
----
-
-## 4. Estructura de carpetas
-
-La estructura base recomendada es:
-
-```text
-.
-├── app/                         # Next.js App Router: web mínima + API routes
-│   ├── page.tsx                 # Setup/status UI
-│   └── api/
-│       ├── mcp/bootstrap/route.ts
-│       ├── mcp/bootstrap/[sessionId]/route.ts
-│       ├── mcp/logout/route.ts
-│       ├── dynamic/delegation/webhook/route.ts
-│       ├── setup/session/route.ts
-│       ├── wallet/state/route.ts
-│       ├── intents/review/route.ts
-│       ├── intents/execute/route.ts
-│       └── audit/events/route.ts
-│
-├── front/                       # UI client-side de setup/delegation status
-│   ├── src/components/
-│   ├── src/hooks/
-│   ├── src/providers/
-│   ├── src/lib/
-│   └── src/types/
-│
-├── back/                        # Core server-side reusable
-│   ├── services/
-│   │   ├── dynamic/
-│   │   │   ├── delegationWebhook.ts
-│   │   │   ├── delegatedSigner.ts
-│   │   │   └── dynamicAuth.ts
-│   │   ├── evm/
-│   │   │   ├── chains.ts
-│   │   │   ├── calldata.ts
-│   │   │   ├── transactions.ts
-│   │   │   ├── simulation.ts
-│   │   │   └── broadcast.ts
-│   │   ├── intent/
-│   │   │   ├── normalizeIntent.ts
-│   │   │   └── supportedActions.ts
-│   │   ├── policy/
-│   │   │   ├── evaluatePolicy.ts
-│   │   │   └── policySchemas.ts
-│   │   ├── risk/
-│   │   │   ├── scoreRisk.ts
-│   │   │   └── riskChecks.ts
-│   │   ├── audit/
-│   │   │   └── auditLog.ts
-│   │   ├── mcp/
-│   │   │   ├── bootstrap.ts
-│   │   │   ├── mcpSessions.ts
-│   │   │   └── authenticateMcp.ts
-│   │   └── setup/
-│   │       └── pairingSessions.ts
-│   └── db/
-│       ├── schema.ts
-│       └── migrations/
-│
-├── mcp/                         # Compass MCP server para Claude Code
-│   ├── server.ts
-│   ├── tools/
-│   │   ├── compassStatus.ts
-│   │   ├── getWalletState.ts
-│   │   ├── reviewIntent.ts
-│   │   ├── executeGuardedIntent.ts
-│   │   └── getAuditEvents.ts
-│   └── schemas.ts
-│
-├── shared/                      # Tipos/Zod schemas compartidos sin secrets
-│   ├── schemas/
-│   ├── types/
-│   └── constants/
-│
-├── docs/
-│   ├── constitution.md          # Este documento
-│   ├── adr/                     # Architecture Decision Records
-│   └── specs/                   # Specs por feature si hacen falta
-│
-├── scripts/                     # Scripts de setup/debug/demo
-└── tests/                       # Tests integrados cross-boundary si aplica
+```bash
+compass-proxy \
+  --upstream "bunx wallet-agent@latest" \
+  --chain monad-testnet \
+  --policy ./policy.monad.json
 ```
 
-### Regla de imports
+Configuración MCP del host:
 
-| Desde | Puede importar | No puede importar |
-| --- | --- | --- |
-| `front/` | `shared/*`, API client | `back/*`, secrets, Dynamic server SDK |
-| `mcp/` | `shared/*`, backend client/core seguro | Dynamic delegated credentials directamente |
-| `app/api/*` | `back/services/*`, `shared/*` | UI internals |
-| `back/services/*` | `shared/*`, server SDKs, DB | React/UI |
-| `shared/*` | librerías puras | env vars, DB, network calls con secrets |
-
----
-
-## 5. Flujo de setup, pairing y token MCP
-
-Claude no abre popups de wallet. Devuelve un link de setup cuando falta autorización. El usuario no copia una API key manualmente.
-
-```text
-1. Claude llama `compass_status`.
-2. MCP local no encuentra credenciales locales.
-3. MCP llama `POST /api/mcp/bootstrap`.
-4. Backend crea `mcp_session_id`, `pairing_code`, `setup_url` y `poll_token`.
-5. Backend guarda `poll_token_hash`; el `poll_token` completo solo vuelve al MCP local.
-6. MCP devuelve a Claude `needs_setup` con `setup_url` y `pairing_code`; no muestra `poll_token`.
-7. Usuario abre la web mínima.
-8. Usuario inicia sesión con Dynamic y selecciona/crea embedded wallet EVM.
-9. Antes de delegar, la web registra el pairing:
-   `pairing_code + dynamic_user_id + wallet_address + wallet_id`.
-10. El endpoint de registro de pairing exige sesión web autenticada por Dynamic/app session y verifica que `wallet_id/wallet_address` pertenezcan al usuario autenticado.
-11. La web llama al SDK que soporte `delegateWaasKeyShares` para iniciar la delegación.
-12. Dynamic envía webhook `wallet.delegation.created`.
-13. Backend verifica firma del webhook contra el raw body, usa `eventId` como idempotency key, descifra materiales y guarda delegación cifrada.
-14. Backend matchea el webhook con el pairing por `dynamic_user_id + wallet_id` o `dynamic_user_id + publicKey`.
-15. Pairing session queda `ready`.
-16. MCP hace polling autenticado con `mcp_session_id + poll_token`.
-17. Backend emite un token MCP scoped y de corta vida.
-18. MCP guarda ese token localmente y lo usa como `Authorization: Bearer <token>` para APIs protegidas.
-19. Claude vuelve a llamar `compass_status` y recibe `ready`.
+```bash
+claude mcp add compass-wallet -- compass-proxy \
+  --upstream "bunx wallet-agent@latest" \
+  --chain monad-testnet \
+  --policy ./policy.monad.json
 ```
 
-### 5.1 Reglas del token MCP
+Regla: no agregar Wallet Agent directo a Claude/Codex/Cursor durante la demo.
 
-- El token MCP no es una private key, key share, Dynamic API key ni wallet API key.
-- El token solo autentica al MCP local frente al backend de Compass.
-- El token debe tener scopes explícitos, por ejemplo `wallet:read`, `intent:review`, `intent:execute`, `audit:read`.
-- El modelo P0 usa **token opaco random + hash en DB**. No usar JWT/HMAC salvo que un ADR cambie esta decisión.
-- El token se guarda localmente fuera del repo, por ejemplo `~/.compass/credentials.json`, con permisos `0600`, o en keychain si hay tiempo.
-- `mcp_session_id` solo no alcanza para retirar el token final; el polling requiere `poll_token`.
-- `COMPASS_MCP_API_KEY` puede existir solo como fallback de desarrollo/manual; no es el happy path de demo.
-- `/api/mcp/logout` revoca el token MCP y permite borrar credenciales locales. No implica revocar Dynamic delegated access salvo que se llame explícitamente a un flujo de revocación de delegación.
+### 3.2 Ciclo de vida de una tool call
 
-### 5.2 Hardening de bootstrap/pairing
+1. Compass arranca o se conecta al upstream MCP.
+2. Compass ejecuta `tools/list` contra el upstream.
+3. Compass compara upstream tools contra el registry local de semántica.
+4. Compass expone al host solo las tools registradas y habilitadas.
+5. Los nombres de tools upstream se mantienen iguales para ser transparente.
+6. Las meta-tools propias usan prefijo `compass_`, por ejemplo `compass_status` o `compass_audit_events`.
+7. El host llama `tools/call` sobre Compass.
+8. Compass busca la semántica registrada exacta para esa función.
+9. Compass valida campos requeridos y evidencia mínima.
+10. Para writes/signatures/token approvals, Compass simula, dry-run o inspecciona payload antes de decidir.
+11. Compass decide `allow` o `block`.
+12. Solo `allow` forwardea la llamada original al upstream.
+13. Compass registra audit de allow/block/error con datos redacted.
 
-- `pairing_code` debe tener entropía suficiente para resistir brute force durante su TTL; si es human-readable, usar rate limit agresivo e intentos máximos.
-- `poll_token` debe ser random de alta entropía, guardarse solo hasheado y ser necesario para retirar el token MCP final.
-- Al emitir el token MCP final, el polling debe quedar consumido o invalidado para evitar reuse.
-- `pairing_sessions` expiran rápido y pasan a `expired/cancelled` si se supera el TTL o se detectan demasiados intentos.
-- Endpoints de bootstrap/polling/setup deben tener rate limit por IP, `mcp_session_id` y `pairing_code`.
-- La web de setup debe restringir CORS/origin a `NEXT_PUBLIC_COMPASS_BASE_URL` y verificar la sesión app/Dynamic antes de asociar wallet.
-- El `pairing_code` mostrado por Claude no autentica por sí solo; solo vincula UX. La autenticación real viene de sesión web + wallet verificada + webhook firmado + `poll_token`.
+### 3.3 Redirección al MCP upstream
 
-### 5.3 Dynamic SDK pendiente de validación
+Compass no reimplementa Wallet Agent. Lo envuelve.
 
-La web puede usar Dynamic React SDK para auth/UI, pero la acción de delegación debe implementarse con el SDK que exponga `delegateWaasKeyShares`. En docs Dynamic aparece bajo `@dynamic-labs-sdk/client/waas`; validar compatibilidad exacta antes de implementar.
+- Frente a Claude/Codex/Cursor, Compass habla como **MCP server**.
+- Frente a Wallet Agent, Compass habla como **MCP client**.
+- En P0 la conexión upstream es `stdio`, arrancada con `--upstream` o `COMPASS_UPSTREAM_CMD`.
+- Upstream P0: `bunx wallet-agent@latest`.
+- Compass consume `tools/list` del upstream, filtra contra el registry de semántica y publica al host solo las tools habilitadas.
+- Cuando una llamada queda `allow`, Compass forwardea el `tools/call` original al upstream MCP por esa conexión.
+- Cuando una llamada queda `block`, Compass no llama al upstream y devuelve una explicación segura al host.
+- Si Wallet Agent falla la PoC de Monad, cambiar de upstream requiere ADR; no se cambia silenciosamente durante P0.
+
+### 3.4 Alcance P0
+
+P0 debe demostrar:
+
+- proxy MCP funcional;
+- upstream Wallet Agent aislado detrás de Compass;
+- tools/list filtrado por registry;
+- Monad Testnet configurada;
+- semántica pre-mapeada por función;
+- policy/risk/audit;
+- bloqueo de private-key/key-management tools;
+- bloqueo de allowance ERC20 peligrosa;
+- forward de read-only y transferencia segura;
+- no bypass directo al upstream.
+
+Fuera de P0: cualquier UI/dashboard, auth flow externo, aprobaciones humanas, firma manual, mainnet, multi-chain real, pagos x402 productivos y cualquier runtime que dependa de intervención del usuario fuera de Claude.
 
 ---
 
-## 6. MCP tools canónicas
+## 4. Registry de semántica de tools
 
-### 6.0 Contrato `review_intent -> execute_guarded_intent`
+Compass no clasifica por nombre suelto ni por heurística de schema. El repo debe tener un registry previo, versionado y testeado que declare qué hace cada función upstream.
 
-`review_intent` es el gate canónico de seguridad. Debe construir o ingerir la transacción candidata, simularla/inspeccionarla, evaluarla contra policy y devolver un `review_id` con un `candidate_tx_digest` canónico.
+Reglas:
 
-`execute_guarded_intent` no debe firmar texto libre como contrato P0. Debe recibir un `review_id` vigente, reconstruir o recuperar la transacción revisada, recalcular el digest y bloquear si no coincide exactamente con lo revisado.
+1. Una tool no registrada no se expone o se expone como bloqueada con error seguro.
+2. Una tool registrada debe declarar clase, efecto de estado, campos requeridos, evidencia mínima, simulation requirement, policy checks y hashes de compatibilidad del schema upstream.
+3. Si el schema upstream cambia de forma incompatible con el registry, la tool queda deshabilitada hasta actualizar el registry. La comparación mínima es por `input_schema_hash`.
+4. El registry gana sobre descripciones naturales del upstream y sobre texto generado por el LLM.
+5. El registry debe vivir en código, por ejemplo `back/services/risk/toolSemantics.ts`, y tener tests snapshot/contract.
 
-El digest canónico debe cubrir al menos: `chain_id`, `from`, `to`, `value`, `data`, tipo de tx, gas/fee relevantes cuando ya estén fijados y cualquier campo que pueda cambiar el efecto de la transacción. Si el backend decide recalcular gas/nonce al ejecutar, debe documentar qué campos son variables seguros y volver a aplicar policy antes de firmar.
-
-### 6.1 `compass_status`
-
-Uso: saber si Claude puede operar o necesita setup.
+### 4.1 Shape mínimo
 
 ```ts
-type CompassStatusResult =
-  | {
-      status: 'needs_setup';
-      setup_url: string;
-      pairing_code: string;
-      expires_at: string;
-    }
-  | {
-      status: 'ready';
-      wallet_address: `0x${string}`;
-      chain_id: number;
-      chain_name: string; // P0 expects Monad testnet, exact slug/name comes from config
-      policy_summary: string;
-      delegation_status: 'active';
-    };
+type ToolClass =
+  | "read_only"
+  | "chain_management"
+  | "simulation"
+  | "transaction_execute"
+  | "token_approval"
+  | "signature"
+  | "contract_write"
+  | "private_key_management"
+  | "unknown_write"
+  | "dangerous";
+
+type ToolSemantics = {
+  registry_version: string;
+  upstream: "wallet_agent";
+  tool_name: string;
+  exposed_name: string;
+  upstream_schema_hash: `sha256:${string}`;
+  input_schema_hash: `sha256:${string}`;
+  tool_class: ToolClass;
+  state_effect:
+    | "none"
+    | "local_chain_config"
+    | "chain_state"
+    | "signature"
+    | "key_material";
+  default_decision: "allow" | "block";
+  requires_simulation: boolean;
+  required_fields: string[];
+  required_evidence: string[];
+  policy_checks: string[];
+  notes?: string;
+};
 ```
 
-### 6.2 `get_wallet_state`
+### 4.2 Registry P0 para Wallet Agent
 
-Uso: consultar estado operativo, no firmar.
+| Tool                   | Clase                 | Efecto                         | Evidencia requerida                                                                          | Decisión P0                                                         |
+| ---------------------- | --------------------- | ------------------------------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `add_custom_chain`     | `chain_management`    | Configura chain local/upstream | `chain_id=10143`, nombre Monad Testnet, `MON`, RPC desde allowlist/env                       | Allow solo para Monad Testnet; block para otra chain                |
+| `switch_chain`         | `chain_management`    | Cambia chain activa            | target `chain_id=10143`                                                                      | Allow solo Monad Testnet                                            |
+| `get_wallet_info`      | `read_only`           | Lectura                        | chain activa, account/address, no write intent                                               | Allow + audit                                                       |
+| `get_balance`          | `read_only`           | Lectura                        | address/account, chain `10143`                                                               | Allow + audit                                                       |
+| `get_token_balance`    | `read_only`           | Lectura                        | address/account, token, chain `10143`                                                        | Allow + audit                                                       |
+| `estimate_gas`         | `simulation`          | Lectura/simulación             | tx candidate (`from`, `to`, `value`, `data` si aplica), chain `10143`                        | Allow + audit                                                       |
+| `simulate_transaction` | `simulation`          | Simulación                     | tx candidate completo, chain `10143`                                                         | Allow + audit                                                       |
+| `dry_run_transaction`  | `simulation`          | Simulación                     | tx candidate completo, chain `10143`                                                         | Allow + audit                                                       |
+| `send_transaction`     | `transaction_execute` | Broadcast/ejecución            | tx candidate completo, simulation/dry-run exitoso, digest estable, policy allow              | Allow solo si policy permite; si no, block                          |
+| `transfer_token`       | `transaction_execute` | Transferencia                  | chain, from/account, token/native asset, recipient, amount, gas estimate, simulation/dry-run | Allow solo si recipient/token/amount/gas están en policy            |
+| `approve_token`        | `token_approval`      | Allowance persistente          | chain, owner/account, token, spender, finite amount, spender/token allowlisted               | Allow solo con policy explícita exacta; unlimited/desconocido block |
+| `sign_typed_data`      | `signature`           | Firma EIP-712                  | domain, `chainId=10143`, verifyingContract, primaryType, decoded fields, policy allow        | Allow solo para typed data mapeada; opaque block                    |
+
+### 4.3 Tools bloqueadas por default
+
+Estas tools no se exponen al host aunque el upstream las liste:
+
+- `import_private_key`
+- `create_encrypted_keystore`
+- `unlock_keystore`
+- `import_encrypted_private_key`
+- `remove_private_key`
+- cualquier tool de keystore/private-key management
+- cualquier tool no presente en el registry P0
+
+---
+
+## 5. Configuración Monad
+
+### 5.1 Testnet P0
+
+Fuente oficial: `https://docs.monad.xyz/developer-essentials/testnets.md`.
+
+```json
+{
+  "name": "Monad Testnet",
+  "chain_id": 10143,
+  "native_currency": {
+    "name": "Monad",
+    "symbol": "MON",
+    "decimals": 18
+  },
+  "rpc_url_env": "MONAD_RPC_URL",
+  "block_explorers": [
+    "https://testnet.monadvision.com",
+    "https://testnet.monadscan.com",
+    "https://monad-testnet.socialscan.io"
+  ]
+}
+```
+
+RPC públicos oficiales de referencia:
+
+- `https://testnet-rpc.monad.xyz`
+- `https://rpc.ankr.com/monad_testnet`
+- `https://rpc-testnet.monadinfra.com`
+
+Regla: `MONAD_RPC_URL` manda sobre cualquier default.
+
+### 5.2 Mainnet
+
+Monad Mainnet usa `chain_id=143`, pero queda fuera de P0. No implementar mainnet sin ADR y policy separada.
+
+### 5.3 Implicaciones RPC para Compass
+
+Fuente oficial: `https://docs.monad.xyz/reference/json-rpc/overview.md`.
+
+Compass debe tener en cuenta que Monad busca compatibilidad Geth, pero:
+
+- `eth_sendRawTransaction` puede aceptar inicialmente txs con nonce gap o balance insuficiente por validación asíncrona.
+- `eth_getTransactionByHash` no devuelve pending txs; puede devolver `null` mientras la tx esté en mempool.
+- `latest` es una vista de baja latencia y puede ser especulativa/provisional.
+- Para value settlement, usar o verificar contra `finalized` cuando el flujo lo requiera.
+- `eth_call` y `eth_estimateGas` tienen límites por provider y pools de ejecución; failures de simulación deben convertirse en risk/policy, no en passthrough silencioso.
+- `eth_maxPriorityFeePerGas` puede devolver un valor sugerido hardcodeado; gas policy debe usar límites explícitos y evidencia del provider.
+- `debug_trace*` requiere trace options explícito `{}` si se usa.
+
+---
+
+## 6. Policy y risk P0
+
+La policy inicial debe ser local, simple, deny-by-default y demo-friendly.
 
 ```ts
-type GetWalletStateResult = {
-  wallet_address: `0x${string}`;
-  chain_id: number;
-  native_balance_wei: string;
-  token_balances: Array<{
-    token_address: `0x${string}`;
-    symbol: string;
-    decimals: number;
-    balance: string;
+type DemoPolicy = {
+  policy_id: string;
+  policy_version: string;
+  chain_id: 10143;
+  allowed_tools: string[];
+  allowed_recipients: `0x${string}`[];
+  allowed_tokens: `0x${string}`[];
+  allowed_spenders: Array<{
+    token: `0x${string}`;
+    spender: `0x${string}`;
+    max_amount_atomic: string;
   }>;
-  delegation_status: 'active' | 'missing' | 'revoked' | 'expired';
+  max_native_transfer_wei: string;
+  max_erc20_transfer_atomic?: string;
+  max_gas_cost_wei: string;
+  max_fee_per_gas_wei?: string;
+  block_unlimited_token_approvals: true;
+  allow_unknown_tools: false;
+  require_simulation_for_writes: true;
 };
 ```
 
-### 6.3 `review_intent`
+Orden de evaluación:
 
-Uso: revisar sin ejecutar.
+```text
+registry primero -> evidencia/simulación -> policy -> allow/block
+```
+
+Una tool no registrada nunca llega a policy: se oculta o se bloquea antes.
+
+Default determinístico:
+
+1. Tool no registrada => `block`.
+2. Tool registrada pero no incluida en `allowed_tools` => `block`.
+3. `chain_id !== 10143` => `block`.
+4. `read_only` => `allow + audit` si la semántica registrada dice `state_effect=none`.
+5. `chain_management` => `allow` solo para Monad Testnet config oficial/allowlisted.
+6. `simulation` => `allow + audit`.
+7. Native transfers => `allow` solo si recipient está allowlisted, monto <= policy, gas <= policy y simulation/dry-run coincide.
+8. ERC20 transfers => `allow` solo si token y recipient están allowlisted, monto <= policy, gas <= policy y simulation/dry-run coincide.
+9. ERC20 allowances => `allow` solo si `token + spender + amount + chain` coinciden con una regla explícita en `allowed_spenders`.
+10. Unlimited token approvals => `block` siempre en P0.
+11. Signatures => `block` si opacas; `sign_typed_data` solo si domain, chain, verifyingContract, primaryType y campos decodificados coinciden con una policy explícita.
+12. Contract writes no registrados => `block`.
+13. Gas/costo por encima de policy => `block`.
+14. Simulation unavailable => `block` para value transfer, token approval, signature o contract write.
+15. Simulation failed => `block` salvo diagnóstico explícitamente no ejecutable.
+
+Cada evaluación guarda `policy_id`, `policy_version` y snapshot suficiente para reproducir la decisión.
+
+---
+
+## 7. Schemas canónicos
+
+Los schemas deben implementarse en Zod/TypeScript antes de usarse por MCP o core.
+
+### 7.1 Policy decision
 
 ```ts
-type ReviewIntentInput = {
-  intent: string;
+type PolicyDecision = {
+  decision: "allow" | "block";
+  reason_code: string;
+  matched_policies: string[];
+  policy_id: string;
+  policy_version: string;
+  explanation: string;
 };
+```
 
-type ReviewIntentResult = {
-  review_id: string;
-  intent_id: string;
-  candidate_tx_digest: `0x${string}`;
-  reviewed_tx: {
-    chain_id: number;
-    from: `0x${string}`;
-    to?: `0x${string}`;
-    value_wei?: string;
-    data_digest?: `0x${string}`;
-  };
-  normalized_action: NormalizedAction;
+Si la acción necesita decisión humana fuera de Claude, se bloquea y se explica qué policy faltaría cambiar.
+
+### 7.2 Guarded forward record
+
+Compass debe guardar una decisión canónica antes de forwardear cualquier acción con side effects. Para read-only, `candidate_tx_digest` puede omitirse. Para transferencias, approvals on-chain, contract writes, signatures o broadcast, es obligatorio.
+
+```ts
+type GuardedForwardRecord = {
+  forward_id: string;
+  audit_event_id: string;
+  tool_name: string;
+  tool_class: ToolClass;
+  chain_id: 10143;
+  digest_version: "compass-candidate-v1";
+  candidate_tx_digest?: `0x${string}`;
+  covered_fields: string[];
+  idempotency_key?: string; // required for any broadcast/execution tool
   simulation: SimulationResult;
   risk: RiskAssessment;
   policy: PolicyDecision;
-  policy_id: string;
-  policy_version: string;
-  expires_at: string;
-  review_text: string;
+  created_at: string;
 };
 ```
 
-### 6.4 `execute_guarded_intent`
+`candidate_tx_digest` debe cubrir como mínimo: `chain_id`, `from/account`, `to`, `value`, `data`, tool name, argumentos normalizados, token/spender/amount cuando aplique, y campos de gas/fee que puedan cambiar el efecto o el costo aprobado.
 
-Uso: ejecutar solo una revisión vigente si Compass lo permite. `idempotency_key` es obligatorio para que retries no firmen dos veces.
-
-```ts
-type ExecuteGuardedIntentInput = {
-  review_id: string;
-  idempotency_key: string;
-};
-
-type ExecuteGuardedIntentResult =
-  | {
-      status: 'executed';
-      intent_id: string;
-      tx_hash: `0x${string}`;
-      audit_event_id: string;
-      risk_level: RiskLevel;
-      policy_decision: 'allow';
-    }
-  | {
-      status: 'blocked' | 'requires_policy_change';
-      intent_id: string;
-      audit_event_id: string;
-      reasons: RiskReason[];
-      review_text: string;
-    }
-  | {
-      status: 'failed';
-      intent_id?: string;
-      audit_event_id: string;
-      error_code: string;
-      error_message: string;
-    };
-```
-
-### 6.5 `get_audit_events`
-
-Uso: mostrar trazabilidad en Claude.
+### 7.3 Risk assessment
 
 ```ts
-type GetAuditEventsInput = {
-  limit?: number;
-  intent_id?: string;
-};
-
-type GetAuditEventsResult = {
-  events: AuditEvent[];
-};
-```
-
----
-
-## 7. Modelos y schemas canónicos
-
-Los schemas deben implementarse en Zod/TypeScript antes de ser usados por APIs o MCP.
-
-### 7.1 `DecodedCall` y `NormalizedAction`
-
-```ts
-type DecodedCall = {
-  function_name?: string;
-  signature?: string; // e.g. transfer(address,uint256)
-  selector?: `0x${string}`;
-  args?: Record<string, unknown>;
-  abi_source?: 'known_abi' | 'erc20_standard' | 'unknown';
-};
-
-type NormalizedAction =
-  | {
-      kind: 'native_transfer';
-      chain_id: number; // P0 must equal configured MONAD_CHAIN_ID
-      from: `0x${string}`;
-      to: `0x${string}`;
-      amount_wei: string;
-    }
-  | {
-      kind: 'erc20_transfer';
-      chain_id: number; // P0 must equal configured MONAD_CHAIN_ID
-      from: `0x${string}`;
-      token: `0x${string}`;
-      to: `0x${string}`;
-      amount_atomic: string;
-    }
-  | {
-      kind: 'erc20_approval';
-      chain_id: number; // P0 must equal configured MONAD_CHAIN_ID
-      owner: `0x${string}`;
-      token: `0x${string}`;
-      spender: `0x${string}`;
-      amount_atomic: string;
-    }
-  | {
-      kind: 'contract_call';
-      chain_id: number; // P0 must equal configured MONAD_CHAIN_ID
-      from: `0x${string}`;
-      to: `0x${string}`;
-      value_wei: string;
-      data: `0x${string}`;
-      decoded?: DecodedCall;
-    };
-```
-
-### 7.2 `RiskAssessment`
-
-```ts
-type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
+type RiskLevel = "low" | "medium" | "high" | "critical";
 
 type RiskReason = {
   code: string;
   level: RiskLevel;
   category:
-    | 'chain'
-    | 'intent_match'
-    | 'amount'
-    | 'recipient'
-    | 'token'
-    | 'approval'
-    | 'contract'
-    | 'simulation'
-    | 'policy'
-    | 'delegation';
+    | "chain"
+    | "tool_semantics"
+    | "intent_match"
+    | "amount"
+    | "recipient"
+    | "token"
+    | "token_approval"
+    | "signature"
+    | "contract"
+    | "simulation"
+    | "policy"
+    | "upstream";
   message: string;
   evidence?: Record<string, unknown>;
 };
@@ -495,25 +429,13 @@ type RiskAssessment = {
 };
 ```
 
-### 7.3 `PolicyDecision`
-
-```ts
-type PolicyDecision = {
-  decision: 'allow' | 'block' | 'requires_policy_change';
-  matched_policies: string[];
-  explanation: string;
-};
-```
-
-P0 no usa `require_approval` para wallet popup ni step-up por transacción. Si una acción necesita aprobación humana fuera de la delegación existente, debe responder `requires_policy_change` o `block` para Claude. `require_step_up_auth` queda como opción futura, no contrato P0.
-
-### 7.4 `SimulationResult`
+### 7.4 Simulation / inspection result
 
 ```ts
 type SimulationResult = {
-  status: 'success' | 'failed' | 'unavailable';
+  status: "success" | "failed" | "unavailable" | "not_required";
   chain_id: number;
-  from: `0x${string}`;
+  from?: `0x${string}`;
   to?: `0x${string}`;
   value_wei?: string;
   nonce?: number;
@@ -526,347 +448,307 @@ type SimulationResult = {
     account: `0x${string}`;
     delta_atomic: string;
   }>;
+  decoded_call?: DecodedCall;
   warnings: string[];
-  raw_error?: string;
+  safe_error?: SafeError;
 };
 ```
 
-### 7.5 `AuditEvent`
+### 7.5 Decoded call
 
 ```ts
-type AuditEvent = {
-  event_id: string;
-  timestamp: string;
-  source: 'mcp' | 'web' | 'api' | 'system';
-  agent_id?: string; // e.g. claude_code
-  dynamic_user_id?: string;
-  wallet_address?: `0x${string}`;
-  chain_id?: number;
-  action:
-    | 'setup_started'
-    | 'delegation_created'
-    | 'delegation_revoked'
-    | 'intent_received'
-    | 'intent_reviewed'
-    | 'policy_evaluated'
-    | 'transaction_signed'
-    | 'transaction_broadcast'
-    | 'transaction_blocked'
-    | 'transaction_failed';
-  intent_id?: string;
-  tx_hash?: `0x${string}`;
-  risk_level?: RiskLevel;
-  policy_decision?: PolicyDecision['decision'];
-  policy_id?: string;
-  policy_version?: string;
-  result: 'success' | 'blocked' | 'failed' | 'pending';
-  metadata?: Record<string, unknown>; // allowlist por action; nunca secrets/raw delegated payloads/tokens
+type DecodedCall = {
+  function_name?: string;
+  signature?: string; // e.g. transfer(address,uint256)
+  selector?: `0x${string}`;
+  args?: Record<string, unknown>;
+  abi_source?:
+    | "known_abi"
+    | "erc20_standard"
+    | "wallet_agent_schema"
+    | "tool_semantics_registry"
+    | "unknown";
 };
 ```
 
-`metadata` debe ser una allowlist por `action`, no un dump libre de objetos internos. Cualquier campo derivado de webhooks, signing, env vars o tokens debe ser redacted antes de entrar al audit trail.
-
-### 7.6 Error model seguro
-
-Errores devueltos al MCP/web deben ser seguros para usuario final y no revelar internals sensibles.
+### 7.6 Safe error
 
 ```ts
 type SafeError = {
   error_code:
-    | 'AUTH_REQUIRED'
-    | 'POLICY_BLOCKED'
-    | 'REVIEW_EXPIRED'
-    | 'DIGEST_MISMATCH'
-    | 'SIMULATION_FAILED'
-    | 'SIMULATION_UNAVAILABLE'
-    | 'SIGNER_UNAVAILABLE'
-    | 'BROADCAST_FAILED'
-    | 'INTERNAL_ERROR';
+    | "POLICY_BLOCKED"
+    | "UNMAPPED_TOOL"
+    | "UNSUPPORTED_CHAIN"
+    | "MISSING_REQUIRED_EVIDENCE"
+    | "DIGEST_MISMATCH"
+    | "SIMULATION_FAILED"
+    | "SIMULATION_UNAVAILABLE"
+    | "UPSTREAM_UNAVAILABLE"
+    | "UPSTREAM_ERROR"
+    | "BROADCAST_FAILED"
+    | "INTERNAL_ERROR";
   safe_message: string;
   debug_ref?: string;
 };
 ```
 
-`raw_error` solo puede existir en logs internos sanitizados o en `SimulationResult.raw_error` cuando no contiene secrets. MCP responses deben usar `SafeError` o campos equivalentes.
+Raw upstream errors deben sanitizarse antes de llegar a MCP, audit o logs visibles.
 
 ---
 
-## 8. DB schemas mínimos
+## 8. Audit trail
 
-La DB puede ser SQLite/Supabase/Postgres para hackathon, pero los conceptos son estables.
+La auditoría es parte del producto, no logging accidental. P0 usa un audit trail local append-only.
 
-### 8.1 `mcp_sessions`
+Eventos mínimos P0:
 
-Representa una instalación/local session del MCP. No contiene delegated credentials.
+- proxy iniciado;
+- upstream conectado/desconectado;
+- `tools/list` filtrado por registry;
+- tool call recibida;
+- semántica de tool resuelta;
+- required evidence validada;
+- simulation/dry-run ejecutado;
+- risk score calculado;
+- policy evaluada;
+- llamada forwardeada;
+- llamada bloqueada;
+- upstream devolvió error;
+- tx enviada/confirmada/fallida si aplica.
 
-| Campo | Tipo | Nota |
-| --- | --- | --- |
-| `id` | string | `mcp_session_id`. |
-| `status` | `pending | active | expired | revoked` |  |
-| `agent_id` | text | P0: `claude_code`. |
-| `poll_token_hash` | text | Hash del token de polling bootstrap; nunca guardar token plaintext. |
-| `token_hash` | text nullable | Hash del token MCP emitido; nunca guardar token plaintext. |
-| `scopes_json` | json | Ej: `wallet:read`, `intent:review`, `intent:execute`, `audit:read`. |
-| `delegation_id` | string nullable | Se completa cuando el pairing queda ready. |
-| `created_at` | timestamp |  |
-| `expires_at` | timestamp | TTL del token/session. |
-| `last_seen_at` | timestamp nullable | Observabilidad. |
-| `revoked_at` | timestamp nullable |  |
-
-### 8.2 `pairing_sessions`
-
-Une el setup URL mostrado por Claude con el usuario/wallet que aprueba Dynamic.
-
-| Campo | Tipo | Nota |
-| --- | --- | --- |
-| `id` | string | ID interno. |
-| `mcp_session_id` | string | FK lógica a `mcp_sessions`. |
-| `pairing_code` | string unique | Código mostrado a Claude/usuario. |
-| `status` | `pending | ready | expired | cancelled` | Estado setup. |
-| `dynamic_user_id` | string nullable | Se registra antes de delegar. |
-| `wallet_id` | text nullable | Dynamic wallet ID; necesario para matchear webhook. |
-| `wallet_address` | text nullable | `publicKey`/EVM address. |
-| `created_at` | timestamp |  |
-| `expires_at` | timestamp | TTL corto. |
-
-### 8.3 `delegations`
-
-Guarda los materiales de Dynamic Delegated Access cifrados. Nunca plaintext.
-
-| Campo | Tipo | Nota |
-| --- | --- | --- |
-| `id` | string | ID interno. |
-| `dynamic_event_id` | string unique | Idempotency key del webhook `wallet.delegation.created`. |
-| `dynamic_webhook_id` | string nullable | Observabilidad. |
-| `dynamic_user_id` | string | User Dynamic. |
-| `wallet_address` | text | EVM address / `publicKey`. |
-| `wallet_id` | text | Dynamic wallet ID. |
-| `chain` | text | P0: `EVM`. |
-| `chain_id` | integer | P0: configured `MONAD_CHAIN_ID`. |
-| `status` | `active | revoked | expired` |  |
-| `policy_json` | json | Límites de ejecución. |
-| `encrypted_wallet_api_key` | text | Cifrado propio at-rest tras descifrar webhook. |
-| `encrypted_key_share` | text | Cifrado propio at-rest tras descifrar webhook. |
-| `created_at` | timestamp |  |
-| `expires_at` | timestamp nullable | Recomendado incluso en demo. |
-| `revoked_at` | timestamp nullable |  |
-
-### 8.4 `webhook_events`
-
-Registro idempotente y auditable de webhooks Dynamic.
-
-| Campo | Tipo | Nota |
-| --- | --- | --- |
-| `event_id` | string unique | Dynamic `eventId`. |
-| `event_name` | text | Ej: `wallet.delegation.created`, `wallet.delegation.revoked`. |
-| `webhook_id` | text nullable | Dynamic `webhookId`. |
-| `status` | `received | processed | ignored | failed` |  |
-| `received_at` | timestamp |  |
-| `processed_at` | timestamp nullable |  |
-| `error_code` | text nullable | Sanitizado. |
-
-### 8.5 `intent_reviews`
-
-| Campo | Tipo | Nota |
-| --- | --- | --- |
-| `review_id` | string unique | Handle devuelto por `review_intent`; requerido por ejecución. |
-| `intent_id` | string unique | Referencia lógica para audit/idempotencia. |
-| `mcp_session_id` | string nullable | Caller MCP. |
-| `delegation_id` | string nullable | Delegación usada para ejecución, si aplica. |
-| `idempotency_key` | text nullable | Unique con `mcp_session_id` cuando se ejecuta; requerido por `execute_guarded_intent`. |
-| `raw_intent` | text | Input de Claude. |
-| `candidate_tx_digest` | text nullable | Hash canónico de la tx revisada; non-null para ejecución. |
-| `reviewed_tx_json` | json nullable | Resumen/campos canónicos de la tx revisada. |
-| `normalized_action_json` | json | `NormalizedAction`. |
-| `simulation_json` | json | `SimulationResult`. |
-| `risk_json` | json | `RiskAssessment`. |
-| `policy_json` | json | `PolicyDecision` snapshot. |
-| `policy_id` | text | Policy evaluada. |
-| `policy_version` | text | Versión/snapshot usado para review/execute. |
-| `status` | `reviewed | executed | blocked | failed | expired` |  |
-| `review_expires_at` | timestamp | Límite para ejecutar sin nueva revisión. |
-| `created_at` | timestamp |  |
-
-### 8.6 `audit_events`
-
-Append-only. No se actualizan eventos existentes salvo corrección administrativa explícita.
-
-| Campo | Tipo | Nota |
-| --- | --- | --- |
-| `event_id` | string unique |  |
-| `timestamp` | timestamp |  |
-| `source` | text | `mcp`, `web`, `api`, `system`. |
-| `agent_id` | text nullable |  |
-| `mcp_session_id` | text nullable |  |
-| `wallet_address` | text nullable |  |
-| `chain_id` | integer nullable |  |
-| `action` | text | Ver `AuditEvent`. |
-| `intent_id` | text nullable |  |
-| `tx_hash` | text nullable |  |
-| `result` | text |  |
-| `metadata_json` | json | Allowlist por action; sin secrets, raw webhook payloads, key material, tokens plaintext ni stack traces sensibles. |
-
----
-
-## 9. Policy P0
-
-La policy inicial debe ser simple y demo-friendly.
+Schema:
 
 ```ts
-type DemoPolicy = {
-  policy_id: string;
-  policy_version: string;
-  chain_id: number; // must equal configured MONAD_CHAIN_ID for P0
-  max_native_transfer_wei: string;
-  max_erc20_transfer_usd?: string;
-  max_gas_cost_wei: string;
-  max_fee_per_gas_wei?: string;
-  allowed_recipients: `0x${string}`[];
-  allowed_tokens: `0x${string}`[];
-  blocked_spenders: `0x${string}`[];
-  allow_unknown_contract_calls: false;
-  allow_unlimited_approvals: false;
+type AuditEvent = {
+  event_id: string;
+  timestamp: string;
+  source: "mcp" | "cli" | "system";
+  agent_id?: string; // e.g. claude_code
+  upstream_id?: string; // e.g. wallet_agent
+  account_address?: `0x${string}`;
+  chain_id?: number;
+  tool_name?: string;
+  tool_class?: ToolClass;
+  candidate_tx_digest?: `0x${string}`;
+  idempotency_key?: string;
+  action:
+    | "proxy_started"
+    | "upstream_connected"
+    | "tools_list_filtered"
+    | "tool_call_received"
+    | "tool_semantics_resolved"
+    | "required_evidence_validated"
+    | "simulation_executed"
+    | "risk_scored"
+    | "policy_evaluated"
+    | "tool_call_forwarded"
+    | "tool_call_blocked"
+    | "upstream_error"
+    | "transaction_broadcast"
+    | "transaction_confirmed"
+    | "transaction_failed";
+  risk_level?: RiskLevel;
+  policy_decision?: PolicyDecision["decision"];
+  policy_id?: string;
+  policy_version?: string;
+  result: "success" | "blocked" | "failed" | "pending";
+  metadata?: Record<string, unknown>; // allowlist por action; nunca dump libre
 };
 ```
 
-Default P0 determinístico:
-
-1. `chain_id !== MONAD_CHAIN_ID` => `block`.
-2. `native_transfer` => `allow` solo si `to` está en `allowed_recipients` **y** `amount_wei <= max_native_transfer_wei`; si no, `requires_policy_change` o `block` según severidad.
-3. `erc20_transfer` => `allow` solo si token está en `allowed_tokens`, recipient está permitido por policy y monto no excede límites configurados.
-4. `erc20_approval` => `block` si `amount_atomic` es `uint256.max`, spender está en `blocked_spenders` o spender/token no está explícitamente permitido.
-5. `contract_call` desconocido => `block`; `allow_unknown_contract_calls` debe permanecer `false` en P0.
-6. Gas estimado, `max_fee_per_gas_wei` o costo total por encima de policy => `requires_policy_change` o `block`; nunca `allow` silencioso.
-7. Simulation unavailable => mínimo `medium/high`; `block` si hay value transfer, approval o unknown contract call.
-8. Simulation failed => `block` salvo que sea una revisión no ejecutable explícitamente marcada como diagnóstico.
-
-Cada evaluación debe guardar `policy_id`, `policy_version` y snapshot suficiente para reproducir la decisión. Cambios de policy requieren auth explícita, evento `policy_changed` y no alteran reviews ya emitidas salvo que se fuerce re-review.
-
-Estas policies son enforceadas por Compass en P0. No asumir que Dynamic limita nativamente montos, destinos o acciones: Dynamic provee la capacidad de firma delegada; Compass provee el guardrail.
+`metadata` debe ser allowlist por action. Nunca guardar private keys, tokens, env vars, raw sensitive payloads, stack traces sensibles ni dumps completos del upstream.
 
 ---
 
-## 10. Reuso desde `../solana_hackathon`
+## 9. Estructura de carpetas recomendada
 
-### Reutilizar como patrón o adaptar
+La estructura puede evolucionar, pero debe preservar el boundary proxy/core/adapters.
 
-- separación `front/back/app/api`;
-- Dynamic provider/auth/session approach;
-- chat/proposal/risk card UI;
-- structured guardrail explanations;
-- audit event shape;
-- API client + Zod schema discipline;
-- Vitest setup;
-- docs por feature.
-
-### No portar como core
-
-- Anchor programs;
-- PDAs;
-- SPL token assumptions;
-- Solana RPC types;
-- Orca/Pyth/devUSDC flows;
-- Solscan wallet validation;
-- Phantom-only signing model;
-- conditional escrow Solana.
-
----
-
-## 11. Variables de entorno
-
-```bash
-# Public/web
-NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID=
-NEXT_PUBLIC_COMPASS_BASE_URL=
-NEXT_PUBLIC_MONAD_CHAIN_ID=10143 # provisional until validated
-
-# Dynamic server-side
-DYNAMIC_ENVIRONMENT_ID=
-DYNAMIC_API_KEY=
-DYNAMIC_WEBHOOK_SECRET=
-DYNAMIC_DELEGATION_PRIVATE_KEY_PEM=
-# If multiline envs are painful in the host, use one of these instead:
-DYNAMIC_DELEGATION_PRIVATE_KEY_BASE64=
-DYNAMIC_DELEGATION_PRIVATE_KEY_PATH=
-
-# Delegation storage encryption
-# 32 bytes base64 for AES-256-GCM/envelope encryption.
-DELEGATION_ENCRYPTION_KEY=
-
-# Monad/EVM
-MONAD_CHAIN_ID=10143 # provisional until validated
-MONAD_RPC_URL=
-MONAD_EXPLORER_URL=
-
-# MCP bootstrap/session auth
-# P0 uses opaque random MCP tokens + DB hashes. No JWT secret required.
-MCP_SESSION_TTL_SECONDS=86400
-COMPASS_MCP_API_KEY= # optional dev/manual fallback only
-
-# Demo/pairing
-COMPASS_DEMO_AGENT_ID=claude_code
-PAIRING_SESSION_TTL_SECONDS=900
-
-# DB
-DATABASE_URL=
+```text
+.
+├── bin/
+│   └── compass-proxy.ts              # Entrypoint CLI/MCP local
+│
+├── mcp/
+│   ├── proxy/
+│   │   ├── server.ts                 # MCP server frente al host
+│   │   ├── upstreamClient.ts         # MCP client stdio/http hacia upstream
+│   │   ├── toolMirror.ts             # tools/list filtering + schema cache
+│   │   ├── callInterceptor.ts        # tools/call gate
+│   │   └── schemas.ts                # Schemas MCP/Compass
+│   └── tools/
+│       ├── compassStatus.ts          # Meta-tool compass_status
+│       └── compassAuditEvents.ts     # Meta-tool compass_audit_events
+│
+├── back/
+│   ├── services/
+│   │   ├── adapters/
+│   │   │   └── walletAgent.ts        # Upstream adapter P0
+│   │   ├── evm/
+│   │   │   ├── chains.ts             # Monad config + allowlist
+│   │   │   ├── calldata.ts           # Decode EVM calldata/signatures
+│   │   │   ├── simulation.ts         # viem/RPC fallback simulation
+│   │   │   └── broadcast.ts          # Execution helpers if needed
+│   │   ├── policy/
+│   │   │   ├── evaluatePolicy.ts
+│   │   │   └── policySchemas.ts
+│   │   ├── risk/
+│   │   │   ├── toolSemantics.ts      # Pre-mapped function semantics
+│   │   │   ├── scoreRisk.ts
+│   │   │   └── riskChecks.ts
+│   │   └── audit/
+│   │       └── auditLog.ts
+│   └── db/                           # Local JSONL/SQLite/Postgres later
+│
+├── config/
+│   ├── policy.monad.example.json
+│   └── chains.monad.example.json
+│
+├── shared/
+│   ├── schemas/
+│   ├── types/
+│   └── constants/
+│
+├── docs/
+│   ├── constitution.md
+│   ├── adr/
+│   └── specs/
+└── tests/
 ```
 
-Regla: ninguna variable sin prefijo `NEXT_PUBLIC_` se usa en frontend.
+### Regla de imports
+
+| Desde             | Puede importar                                 | No puede importar                        |
+| ----------------- | ---------------------------------------------- | ---------------------------------------- |
+| `mcp/proxy/*`     | `shared/*`, `back/services/*` seguros, MCP SDK | secrets, key material, env secret values |
+| `back/services/*` | `shared/*`, server SDKs, DB/local storage      | UI internals                             |
+| `shared/*`        | librerías puras                                | env vars, DB, network calls con secrets  |
 
 ---
 
-## 12. Testing mínimo
+## 10. Variables de entorno
+
+```bash
+# Monad/EVM
+MONAD_CHAIN_ID=10143
+MONAD_RPC_URL=
+MONAD_EXPLORER_URL=https://testnet.monadscan.com
+
+# Compass proxy
+COMPASS_UPSTREAM_CMD="bunx wallet-agent@latest"
+COMPASS_UPSTREAM_TRANSPORT=stdio
+COMPASS_POLICY_PATH=./policy.monad.json
+COMPASS_AUDIT_PATH=./.compass/audit.jsonl
+COMPASS_DEMO_AGENT_ID=claude_code
+
+# Optional local credential/cache paths; must stay outside git when used
+COMPASS_HOME=~/.compass
+```
+
+Reglas:
+
+- No leer ni loguear valores de secrets.
+- `.env` nunca es fuente de documentación; la constitución documenta nombres y límites, no valores.
+- `COMPASS_AUDIT_PATH` debe apuntar a un archivo append-only o tratarse como append-only por la capa de audit.
+
+---
+
+## 11. Testing mínimo
 
 Antes de considerar estable una feature crítica:
 
-- policy tests para allow/block;
-- risk tests para approvals peligrosos;
-- calldata decode tests;
+- registry tests para cada tool mapeada;
+- tests que prueben que tools upstream no registradas no se exponen o se bloquean;
+- schema compatibility tests entre upstream `tools/list` y registry, incluyendo `input_schema_hash`;
+- precedence tests: registry primero, policy después;
+- policy tests para `allow`/`block`;
+- risk tests para allowances ERC20 peligrosas;
+- chain allowlist tests (`10143` allow, otros block por default);
 - simulation fallback tests;
-- delegated signer tests con Dynamic mockeado;
-- MCP bootstrap/session token tests;
-- MCP tool schema tests;
-- endpoint auth matrix tests por ruta y scope;
-- review/execute binding tests: `review_id` vigente, digest matching, digest mismatch bloquea;
-- webhook signature verification tests;
-- webhook idempotency tests con `eventId` duplicado;
-- pairing/webhook matching tests por `dynamic_user_id + wallet_id/publicKey`;
-- MCP polling tests que prueben que `mcp_session_id` sin `poll_token` no puede retirar token final;
-- execution idempotency tests: mismo `(mcp_session_id, idempotency_key)` no firma dos veces y retries devuelven el resultado previo;
-- gas policy tests;
-- audit redaction tests: ningún secret aparece en eventos/logs.
+- calldata/typed-data decode tests;
+- MCP `tools/list` filtering tests;
+- MCP `tools/call` interception tests;
+- blocked private-key tool tests;
+- blocked unknown-write tests;
+- audit redaction tests;
+- upstream error sanitization tests;
+- digest tests para `candidate_tx_digest` y campos cubiertos;
+- idempotency tests obligatorios para cualquier tool que haga broadcast/execution;
+- gas policy tests con casos por encima/debajo del límite.
 
 ---
 
-## 13. Validaciones pendientes antes de implementar
+## 12. PoC obligatorio antes de demo
 
-Estas afirmaciones son blockers de P0: no deben tratarse como verdad cerrada hasta validarlas con PoC, docs oficiales o dashboard.
+Checklist P0:
 
-- [ ] `MONAD_CHAIN_ID=10143` y nombre `monad_testnet` confirmados contra Monad docs oficiales, RPC real y Dynamic Dashboard.
-- [ ] Dynamic puede crear/usar embedded EVM wallets para Monad testnet en el entorno configurado.
-- [ ] La web confirma qué SDK exacto expone `delegateWaasKeyShares` en nuestro stack React/Next.
-- [ ] Webhook Dynamic probado end-to-end con firma `x-dynamic-signature-256` sobre raw body, `eventId`, `walletId`, `publicKey`, `encryptedDelegatedShare` y `encryptedWalletApiKey`.
-- [ ] `delegatedSignTransaction` firma una transacción compatible con Monad testnet y `viem` puede broadcast-earla con nuestro RPC.
-- [ ] Storage local de token MCP validado en la máquina demo: `~/.compass/credentials.json` con permisos `0600` o keychain.
-- [ ] Digest canónico review/execute validado con una tx real y un caso de mismatch bloqueado.
-- [ ] Endpoint auth matrix probada con casos positivos/negativos por scope.
+1. Instalar Wallet Agent localmente.
+2. Levantar `compass-proxy` con Wallet Agent como upstream.
+3. Confirmar que Compass puede hacer `tools/list` al upstream.
+4. Confirmar que Compass expone hacia Claude solo tools registradas/habilitadas.
+5. Confirmar que cualquier tool no registrada se oculta o bloquea.
+6. Ejecutar `add_custom_chain` para Monad Testnet y verificar que otra chain se bloquea.
+7. Ejecutar `switch_chain` a Monad Testnet.
+8. Ejecutar `get_wallet_info` y verificar `chain_id=10143`.
+9. Ejecutar `get_balance` con una cuenta con MON de faucet.
+10. Ejecutar `estimate_gas` para una transferencia simple.
+11. Ejecutar `simulate_transaction` o `dry_run_transaction` para una transferencia simple.
+12. Ejecutar `transfer_token` o `send_transaction` de monto mínimo en testnet con policy allow y verificar `candidate_tx_digest`.
+13. Reintentar la misma ejecución con el mismo `idempotency_key` y verificar que no produce una segunda ejecución.
+14. Ejecutar `approve_token` con `uint256.max` y verificar que Compass bloquea sin forwardear.
+15. Ejecutar `approve_token` limitado con `token + spender + amount` no allowlisted y verificar block.
+16. Ejecutar `approve_token` limitado con policy explícita exacta y verificar allow, solo si la demo necesita mostrar ese caso.
+17. Confirmar audit local append-only para allow/block/forward, incluyendo digest cuando aplique.
+18. Confirmar que el host MCP no tiene Wallet Agent directo configurado.
+
+Criterio de éxito:
+
+```text
+Claude Code puede usar funciones de Wallet Agent sin ver Wallet Agent directamente.
+Compass expone solo funciones pre-mapeadas.
+Compass bloquea unknown/private-key tools y allowances ERC20 peligrosas antes del upstream.
+Compass forwardea una acción segura en Monad Testnet solo cuando policy y simulation lo permiten.
+```
 
 ---
 
-## 14. Non-goals P0
+## 13. Validaciones pendientes
 
-No hacer en la primera versión:
+Estas afirmaciones no deben tratarse como verdad cerrada hasta tener PoC/evidencia.
 
-- dashboard completo de portfolio;
-- CLI como interfaz principal;
-- approvals por popup de wallet en cada tx;
-- raw signing desde Claude;
-- soporte Solana;
-- multi-chain real;
-- roles/equipos;
-- policy marketplace;
-- swaps complejos si no hay tiempo;
-- threat intelligence externa obligatoria.
+- [ ] Wallet Agent funciona end-to-end con `add_custom_chain` + Monad Testnet.
+- [ ] Wallet Agent expone suficiente payload para inspeccionar/simular writes antes de forwardear.
+- [ ] El registry P0 cubre todas las funciones que se van a exponer en demo.
+- [ ] Cada tool mapeada tiene `input_schema_hash` validado contra `tools/list` del upstream.
+- [ ] `simulate_transaction`/`dry_run_transaction` del upstream cubre los casos P0; si no, Compass usa fallback con RPC/viem.
+- [ ] Gas estimation en Monad Testnet se comporta de forma estable con el provider elegido.
+- [ ] `eth_sendRawTransaction`/broadcast se valida con la semántica asíncrona de Monad y se audita correctamente.
+- [ ] El host MCP de demo no tiene Wallet Agent configurado en paralelo.
+- [ ] `candidate_tx_digest` cubre los campos canónicos definidos y se audita antes de forwardear writes.
+- [ ] Toda tool que pueda hacer broadcast/execution exige idempotencia.
+- [ ] El audit local append-only no incluye secrets ni payloads sensibles.
+
+---
+
+## 14. Fuentes oficiales y referencias
+
+Fuente de producto local:
+
+- `compass_product_spec_monad_mcp_proxy_v0.2.md`
+
+Monad docs oficiales consultadas:
+
+- Docs index: `https://docs.monad.xyz/llms.txt`
+- Monad MCP guide: `https://docs.monad.xyz/guides/monad-mcp.md`
+- Network Information — Testnets: `https://docs.monad.xyz/developer-essentials/testnets.md`
+- Network Information — Mainnet: `https://docs.monad.xyz/developer-essentials/network-information/index.md`
+- JSON-RPC Overview: `https://docs.monad.xyz/reference/json-rpc/overview.md`
+
+Otras referencias de producto/spec:
+
+- Wallet Agent GitHub: `https://github.com/wallet-agent/wallet-agent`
+- MCP tools specification: `https://modelcontextprotocol.io/specification/2025-06-18/server/tools`
+- MCP TypeScript SDK: `https://github.com/modelcontextprotocol/typescript-sdk`
 
 ---
 
@@ -879,4 +761,4 @@ Para cambiar una decisión fundacional:
 3. actualizar esta constitución si el cambio queda aceptado;
 4. ajustar schemas/tests antes de cambiar comportamiento crítico.
 
-La constitución gana sobre comentarios sueltos, prompts anteriores y código accidental.
+La constitución gana sobre comentarios sueltos, prompts anteriores, código accidental y specs antiguas.
