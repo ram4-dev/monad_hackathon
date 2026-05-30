@@ -1,0 +1,35 @@
+Manual OpenSpec Fallback Review (openspec CLI unavailable)
+
+Reason
+- `openspec validate wave-3-policy-risk-audit-foundation --strict` could not be run because the `openspec` binary was unavailable in PATH.
+
+Review performed
+- Manually reviewed Wave 3 artifacts for internal consistency and scope boundaries:
+  - proposal.md
+  - design.md
+  - tasks.md
+  - specs/policy-evaluation/spec.md
+  - specs/risk-checks/spec.md
+  - specs/safe-error-denial/spec.md
+  - specs/audit-trail/spec.md
+  - specs/w4-readiness/spec.md
+
+Checks completed
+1) Scope alignment
+- Artifacts consistently define W3 as on-chain policy/risk/audit foundation and keep W4 forwarding out of scope.
+
+2) Security posture
+- Policy-source failures are fail-closed in spec/design/tasks.
+- Secret-safe handling and no-secrets rules are present.
+
+3) Wave dependency alignment
+- W2 handoff preservation (no reclassification) remains explicit.
+- W4 readiness is defined as downstream handoff, not implemented forwarding.
+
+4) Delivery and gating
+- Single PR decision is recorded.
+- Live Monad Testnet deploy remains gated and marked not run without explicit approval.
+
+Outcome
+- Manual fallback review completed; no contradiction found that would block Wave 3 apply artifacts.
+- Replace with strict `openspec validate ... --strict` output once CLI becomes available.

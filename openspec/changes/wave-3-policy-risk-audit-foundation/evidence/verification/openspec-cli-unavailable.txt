@@ -1,0 +1,1 @@
+openspec CLI unavailable in PATH; manual artifact review performed by apply executor.

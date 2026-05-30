@@ -1,0 +1,24 @@
+Wave 3 RED-Phase Retrospective Summary (non-raw evidence)
+
+Context
+- This file is a retrospective summary created after reviewer feedback.
+- Raw RED command logs were not preserved at the time of execution.
+
+What was observed during RED
+1) JavaScript RED
+- Before implementing W3 modules, the W3-focused tests were added first.
+- Running `cd packages/coding-agent && npm test` produced module-resolution failures consistent with missing implementation (`MODULE_NOT_FOUND`), confirming RED state.
+
+2) Solidity RED
+- Before implementing `CompassPolicy.sol`, the Foundry test file `CompassPolicy.t.sol` existed.
+- Running `cd packages/coding-agent/contracts && forge test` failed because contract symbols/import target were missing, confirming RED state.
+
+What exists as current raw evidence
+- GREEN/PASS evidence files are available:
+  - package-test-output.txt
+  - forge-test-output.txt
+  - forge-build-output.txt
+
+Integrity note
+- This summary does not fabricate raw terminal output.
+- It records the previously documented RED observations now required for audit traceability.

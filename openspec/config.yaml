@@ -5,7 +5,7 @@ created_for_change: wave-0-upstream-monad-poc
 sdd:
   execution_mode: interactive
   artifact_store: both
-  pr_strategy: auto-forecast
+  pr_strategy: single-pr-default
   review_budget_lines: null # User selected no fixed cap; still warn on multi-area/high-risk diffs.
 
 strict_tdd: false

@@ -1,0 +1,47 @@
+{
+  "source": {
+    "chain_id": 10143,
+    "network_name": "Monad Testnet",
+    "contract_address": "0x1111111111111111111111111111111111111111",
+    "schema_id": "0xbff749158587599401933b69539ef72bfaebb403678a1d1db445a6e9a3bac599",
+    "deployment_chain_id": 10143,
+    "owner_address": "0x2222222222222222222222222222222222222222",
+    "read_status": "success",
+    "read_block_number": "123",
+    "last_updated_block": "120"
+  },
+  "policy_id": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "policy_version": "1",
+  "content_hash": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "flags": {
+    "block_unlimited_token_approvals": true,
+    "allow_unknown_tools": false,
+    "require_simulation_for_writes": true,
+    "frozen": false
+  },
+  "caps": {
+    "max_native_transfer_wei": "1000000000000000000",
+    "max_erc20_transfer_atomic": "1000000",
+    "max_gas_cost_wei": "100000000000000000",
+    "max_fee_per_gas_wei": "0"
+  },
+  "allowed_tool_keys": [],
+  "allowed_recipients": ["0x3333333333333333333333333333333333333333"],
+  "allowed_tokens": ["0x4444444444444444444444444444444444444444"],
+  "allowed_spenders": [
+    {
+      "token": "0x4444444444444444444444444444444444444444",
+      "spender": "0x5555555555555555555555555555555555555555",
+      "max_amount_atomic": "1000",
+      "enabled": true
+    }
+  ],
+  "typed_data_rules": [
+    {
+      "domain_separator_hash": "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "verifying_contract": "0x6666666666666666666666666666666666666666",
+      "primary_type_hash": "0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "enabled": true
+    }
+  ]
+}
