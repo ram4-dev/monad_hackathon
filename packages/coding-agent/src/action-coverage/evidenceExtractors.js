@@ -32,6 +32,16 @@ function extractEvidence({ toolName, semantics, args = {}, ctx = {}, simulation 
     chain_evidence: { chain_id: chainId },
   };
 
+  // Flatten one level of nested object args into dotted keys so required_fields declared with dot
+  // notation (e.g. "nativeCurrency.symbol" on add_custom_chain) are satisfied.
+  for (const [k, v] of Object.entries(args)) {
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      for (const [k2, v2] of Object.entries(v)) {
+        if (evidence[`${k}.${k2}`] == null) evidence[`${k}.${k2}`] = v2;
+      }
+    }
+  }
+
   // Satisfy registry required_evidence presence flags (pipeline-provided guarantees + real data).
   for (const name of (semantics && semantics.required_evidence) || []) {
     if (name && !name.endsWith('?') && evidence[name] == null) evidence[name] = true;

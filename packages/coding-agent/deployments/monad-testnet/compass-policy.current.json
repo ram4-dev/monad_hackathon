@@ -8,18 +8,21 @@
   "deploy_status": "success",
   "owner_address": "0xAaCF452ef1385B2c5555F1097b4915B54359550E",
   "policy_id": "0x4483c526744fccdc9109ae4c157213b9dd7e173c311199ff11e2fdbb70a53116",
-  "policy_version": "1",
+  "policy_version": "2",
   "schema_id": "0xbff749158587599401933b69539ef72bfaebb403678a1d1db445a6e9a3bac599",
   "content_hash": "0x8f85dcacbc82173cd2c1f32ff9d602364460ff312f1ddbdb52918a02e876193d",
   "frozen": false,
-  "allowed_tool_count": 5,
+  "allowed_tool_count": 7,
   "allowed_tools_demo": [
     "get_balance",
     "get_wallet_info",
     "get_token_balance",
+    "add_custom_chain",
+    "switch_chain",
     "transfer_token",
     "approve_token"
   ],
+  "_version_note": "v2 (owner update) added add_custom_chain + switch_chain so the host can bootstrap Monad Testnet in wallet-agent through the gate; Monad-only still enforced by risk checks (chain_id 10143).",
   "flags": {
     "block_unlimited_token_approvals": true,
     "allow_unknown_tools": false,

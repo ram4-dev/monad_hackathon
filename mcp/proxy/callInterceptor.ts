@@ -80,7 +80,10 @@ export class CallInterceptor {
       };
     }
 
-    if (resolution.semantics.default_decision !== "allow") {
+    // When the W4/W5 guarded pipeline is active, the on-chain policy + risk + LLM make the
+    // allow/block decision, so the registry `default_decision` (a pre-policy W1/W2 placeholder)
+    // is not the gate. Without the guarded pipeline, keep the conservative default-block.
+    if (!this.guarded && resolution.semantics.default_decision !== "allow") {
       return {
         outcome: { kind: "block", toolName, error: sanitizeToSafeError("POLICY_BLOCKED") },
         args,
